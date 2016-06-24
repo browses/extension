@@ -1,0 +1,91 @@
+<html>
+<title>Browses | Recent</title>
+<head>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+		browses-feed {
+			width: 100%;
+			min-height: 100vh;
+			display: flex;
+			flex-flow: row wrap;
+			font-size: 10px;
+			justify-content: center;
+			align-items: center;
+			padding: 0 4rem 4rem 0;
+		}
+
+		browse- {
+			max-width: 100%;
+			flex: 40%;
+			margin: 4rem 0 0 4rem;
+			color: #b6b6b6;
+		}
+		browse- article {
+			padding: 2rem;
+		}
+		browse- img {
+			display: block;
+			max-width: 100%;
+			box-shadow: 0 0 5px rgba(0,0,0,0.2);
+		}
+		browse- img:hover {
+			box-shadow: 0 1px 5px 1px rgba(0,0,0,0.2);
+		}
+		browse- info- {
+			display: block;
+			margin: 0;
+		}
+		browse- info- a {
+			color: rgba(0,0,0,0.5);
+		}
+
+		browse- title- {
+			display: block;
+			width: 100%;
+			overflow: hidden;
+			font-size: 1.5rem;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			margin-bottom: 0.25rem;
+			color: rgba(0,0,0,0.62);
+		}
+
+		browse- browser-count {
+			display: block;
+			margin-top: 1rem;
+		}
+
+		user-name {
+			display: flex;
+			flex-direction: column;
+			height: 80vh;
+		}
+
+		user-name h1 {
+			margin: auto;
+			margin-bottom: 0;
+			font-size: calc(1rem + 5vw);
+		}
+
+		user-name h3 {
+			margin: auto;
+			margin-top: 2rem;
+			font-size: calc(1rem + .5vw);
+			letter-spacing: .3rem;
+			color: rgba(0,0,0,0.5);
+		}
+
+
+	</style>
+</head>
+<body>
+	<user-name>
+		<h1></h1>
+		<h3>BROWSES</h3>
+	</user-name>
+	<browses-feed></browses-feed>
+	<script src="screenshot.js"></script>
+</body>
+</html>

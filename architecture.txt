@@ -1,0 +1,35 @@
+
+
+browser :{
+	name: lukejacksonn
+	gid: 123213234234
+}
+
+browse :{
+	browser: lukejacksonn
+	published: 104587362
+	shot: http://s3.browses.file.jpg
+	url: http://google.com
+}
+
+link :{
+	url: http://google.com
+	title: Some Website
+	browsers: [lukejacksonn, joerobot]
+	first_published: 14023948
+	first_published_by: lukejacksonn
+	last_published: 14023948
+	last_published_by: lukejacksonn
+	usefuls: 0
+	interestings: 0
+	entertainings: 0
+}
+
+browse {
+	browser: lukejacksonn,
+	published: 104587362,
+	shot: http://s3.browses.file.jpg,
+	url: http://google.com,
+	title: Some Website,
+	browsers: [lukejacksonn, joerobot]
+}
