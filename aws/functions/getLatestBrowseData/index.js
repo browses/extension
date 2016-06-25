@@ -7,7 +7,11 @@
  * @resource: /browses
  * @method: GET
  * @returns:
- *      - array of objects...
+ *      - Array:
+ *        - browser: [string]
+ *        - shot: link to screenshot in S3 [string]
+ *        - url: link to browse [string]
+ *        - published: utc time published in ms [integer]
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -62,6 +66,7 @@ exports.handle = function handler(event, context) {
   dynamo.scan(params, (err, data) => {
     if (err) {
       context.fail('Internal Error: Failed to scan browses');
+      return;
     }
     else {
       const rsp = data.Items;
@@ -87,6 +92,7 @@ exports.handle = function handler(event, context) {
         dynamo.batchGet(batchParams, (err, data) => {
           if (err) {
             context.fail('Internal Error: Failed to batch get interests.');
+            return;
           } else {
             const links = data.Responses.links.map(function (item) {
               item.browsers = item.browsers.values;

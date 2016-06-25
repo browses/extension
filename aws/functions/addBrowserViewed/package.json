@@ -1,0 +1,9 @@
+{
+  "name": "add_browser_viewed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "jsonwebtoken": "^7.0.1"
+  }
+}
