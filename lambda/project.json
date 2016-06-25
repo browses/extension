@@ -1,0 +1,10 @@
+
+{
+  "name": "browses",
+  "description": "",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::188428953446:role/LambdaExecution",
+  "defaultEnvironment": "dev",
+  "environment": {}
+}

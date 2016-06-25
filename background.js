@@ -20,7 +20,7 @@ chrome.browserAction.onClicked.addListener(function() {
         };
 
         var browse = {
-          browser: 'lukejacksonn',
+          browser: 'joerobot',
           title: arrayOfTabs[0].title,
           shot: optimize(screenshotUrl, 0.5, 1),
           url: arrayOfTabs[0].url
@@ -40,7 +40,7 @@ chrome.browserAction.onClicked.addListener(function() {
           }
         };
 
-        xhr.open('POST', 'https://ih41lln30j.execute-api.eu-west-1.amazonaws.com/beta/browses', true);
+        xhr.open('POST', 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses', true);
         xhr.send(JSON.stringify(browse));
 
       });
