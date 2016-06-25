@@ -51,7 +51,7 @@ exports.handle = function handler(event, context) {
 
   const guid = getGUID();
   const timestamp = (new Date()).getTime();
-  let buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+  const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
   const params = {
     Bucket: 'browses',
     Key: event.browser + '/' + guid,

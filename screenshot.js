@@ -70,7 +70,7 @@ xhr.onreadystatechange = function() {
   }
 };
 
-xhr.open('GET', `https://ih41lln30j.execute-api.eu-west-1.amazonaws.com/beta/browses/${getQueryVariable('browser')}`, true);
+xhr.open('GET', `https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses/${getQueryVariable('browser')}`, true);
 xhr.send();
 
 document.querySelector('user-name h1').innerHTML = getQueryVariable('browser');

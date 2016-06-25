@@ -6,7 +6,7 @@
  * into this particular browse.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
- * @resource: /browses/{browse_id}
+ * @resource: /links/view
  * @method: POST
  * @params:
  *      - browser: username [string]

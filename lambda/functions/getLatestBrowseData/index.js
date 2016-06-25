@@ -71,28 +71,33 @@ exports.handle = function handler(event, context) {
       const linkObjs = links.map(function (item) {
         return { url: item };
       });
-      const batchParams = {
-        RequestItems: {
-          links: {
-            Keys: linkObjs,
+
+      if (linkObjs.length > 0) {
+        const batchParams = {
+          RequestItems: {
+            links: {
+              Keys: linkObjs,
+            },
           },
-        },
-      };
-      /*
-       * Get interests for the last 24 hours worth of data
-       * from the links table.
-       */
-      dynamo.batchGet(batchParams, (err, data) => {
-        if (err) {
-          context.fail('Internal Error: Failed to batch get interests.');
-        } else {
-          const links = data.Responses.links.map(function (item) {
-            item.browsers = item.browsers.values;
-            return item;
-          });
-          context.succeed(merge(rsp, links));
-        }
-      });
+        };
+        /*
+         * Get interests for the last 24 hours worth of data
+         * from the links table.
+         */
+        dynamo.batchGet(batchParams, (err, data) => {
+          if (err) {
+            context.fail('Internal Error: Failed to batch get interests.');
+          } else {
+            const links = data.Responses.links.map(function (item) {
+              item.browsers = item.browsers.values;
+              return item;
+            });
+            context.succeed(merge(rsp, links));
+          }
+        });
+      } else {
+        context.succeed(links);
+      }
     }
   });
 };

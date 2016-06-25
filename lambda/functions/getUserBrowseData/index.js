@@ -66,38 +66,43 @@ exports.handle = function handler(event, context) {
     const linkObjs = links.map(function (item) {
       return { url: item };
     });
-    const batchParams = {
-      RequestItems: {
-        links: {
-          Keys: linkObjs,
+
+    if (linkObjs.length > 0) {
+      const batchParams = {
+        RequestItems: {
+          links: {
+            Keys: linkObjs,
+          },
         },
-      },
-    };
-    /*
-     * Batch get all of browsers interests from links table.
-     */
-    dynamo.batchGet(batchParams, function (err, data) {
-      if (err) {
-        context.fail('Internal Error: Failed to batch get interests');
-      } else {
-        var links = data.Responses.links.map(function (item) {
-          item.browsers = item.browsers.values;
-          return item;
-        });
-        links = links.map(function (item) {
-          if (item.hasOwnProperty('useful')) {
-            item.useful = item.useful.values;
-          }
-          if (item.hasOwnProperty('interesting')) {
-            item.interesting = item.interesting.values;
-          }
-          if (item.hasOwnProperty('entertaining')) {
-            item.entertaining = item.entertaining.values;
-          }
-          return item;
-        });
-        context.succeed(merge(rsp, links));
-      }
-    });
+      };
+      /*
+       * Batch get all of browsers interests from links table.
+       */
+      dynamo.batchGet(batchParams, function (err, data) {
+        if (err) {
+          context.fail('Internal Error: Failed to batch get interests');
+        } else {
+          var links = data.Responses.links.map(function (item) {
+            item.browsers = item.browsers.values;
+            return item;
+          });
+          links = links.map(function (item) {
+            if (item.hasOwnProperty('useful')) {
+              item.useful = item.useful.values;
+            }
+            if (item.hasOwnProperty('interesting')) {
+              item.interesting = item.interesting.values;
+            }
+            if (item.hasOwnProperty('entertaining')) {
+              item.entertaining = item.entertaining.values;
+            }
+            return item;
+          });
+          context.succeed(merge(rsp, links));
+        }
+      });
+    } else {
+      context.succeed(links);
+    }
   });
 };
