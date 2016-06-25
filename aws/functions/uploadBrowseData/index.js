@@ -14,8 +14,8 @@
  *      - shot: browse screenshot [image/jpeg]
  *      - token: jwt token from cognito [string]
  * @returns:
- *      - published_frist_time: timestamp browse was published in ms [integer]
- *      - browse: username [string]
+ *      - published_first_time: timestamp browse was published in ms [integer]
+ *      - browser: username [string]
  *      - url: browse URL [string]
  *      - title: browse title [string]
  *      - shot: link to S3 store of image [string]
