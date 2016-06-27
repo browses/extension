@@ -39,15 +39,17 @@ class TestBrowsesAuth(unittest.TestCase):
         req = dict(browser=self.user, url=self.service, title="API Tests",
                    token=self.token, shot=self.image)
         r = requests.post(self.url + resource, json=req)
-        rsp = r.json()
         self.assertEqual(r.status_code, 200)
+        rsp = r.json()
         self.assertIsInstance(rsp, dict)
         self.assertIn('browser', rsp)
         self.assertIn('url', rsp)
         self.assertIn('title', rsp)
         self.assertIn('shot', rsp)
         self.assertIn('title', rsp)
-        self.assertIn('published_first_time', rsp)
+        self.assertIn('published', rsp)
+        self.__class__.published = rsp['published']
+        self.__class__.shot = rsp['shot']
 
     def test_add_browser_upvote(self):
         """ Test adding upvote to browse """
@@ -55,8 +57,8 @@ class TestBrowsesAuth(unittest.TestCase):
         req = dict(browser=self.user, url=self.service,
                    upvote="interesting", token=self.token)
         r = requests.post(self.url + resource, json=req)
-        rsp = r.json()
         self.assertEqual(r.status_code, 200)
+        rsp = r.json()
         self.assertIsInstance(rsp, dict)
         self.assertIn('browser', rsp)
         self.assertIn('url', rsp)
@@ -67,11 +69,27 @@ class TestBrowsesAuth(unittest.TestCase):
         resource = "/links/view"
         req = dict(browser=self.user, url=self.service, token=self.token)
         r = requests.post(self.url + resource, json=req)
-        rsp = r.json()
         self.assertEqual(r.status_code, 200)
+        rsp = r.json()
         self.assertIsInstance(rsp, dict)
         self.assertIn('browser', rsp)
         self.assertIn('url', rsp)
+
+    def test_delete_browse(self):
+        """ Test deleting a browse """
+        r = requests.get(self.url + "/browses/" + self.user)
+        self.assertEqual(r.status_code, 200)
+        rsp = r.json()
+        resource = "/browses"
+        req = dict(browser=self.user, shot=rsp[0]['shot'],
+                   token=self.token, published=rsp[0]['published'])
+        r = requests.delete(self.url + resource, json=req)
+        self.assertEqual(r.status_code, 200)
+        rsp = r.json()
+        self.assertIn('browser', rsp)
+        self.assertIn('shot', rsp)
+        self.assertIn('published', rsp)
+
 
 class TestBrowsesUnauth(unittest.TestCase):
     """
@@ -115,36 +133,12 @@ class TestBrowsesUnauth(unittest.TestCase):
 def main():
     unittest.main(verbosity=2)
 
-IMAGE = """data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
-2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDg
-sLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQU
-FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wA
-ARCAGSAnoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI
-CQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBka
-EII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVW
-V1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqr
-KztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6
-/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBA
-cFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYk
-NOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dX
-Z3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbH
-yMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9UK
-KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoooo
-AKKKKACiiigAooooAKKKKAC...k45oA+y6ik/4+I/91v5ipaik/4+I/8Adb+Yo
-AlooooAKKKKACiiigAooooAKKKKAIbz/j2f8P51KOgqK8/49n/D+dSjoKlksWi
-iikIKKKKACiiigAooooAhT/j7m/3F/wDZqmooqigooopjCiiigAooooAKKKKAC
-op/4P8AeFFFAEtUtb/5A19/1wk/9BNFFIR/McOlLRRTGFFFFAEb/epD1oooASl
-9aKKAAUelFFACnqa9e+KpK+AvCABwPsipx/dEkuB9B2FFFAHkZJ6Z4q1p88kFw
-GikaNsEZRiDRRQB6V8BoY734hqbhFnKwTMvmjdghDgjPevpjwDDGPBWkYRRmFC
-eOpLZNFFAHbpY211Dtnt4plI5WRAw/Wvjr456bZ6Z8RJorO1gtIiAdkEYRc+uA
-KKKAPqj9lxQvw/TAA/eHoPYV6DqaL/wkZOBkpDzj3f/AAFFFAGi+m2jzYa1hYN
-lmBjHJz1PFeL+OWLa74tckl0urVFY9VURKQB6DJJx6k0UUAch+1o7D4M+GMMR5
-t4ryc/fby3OT6n3r5M2j7BEcD7xooqepLPcba7ntv2WLPyZpIt2oXKtscjI54O
-O1cr8ZJXPhb4dqXYr/YURwTxRRQho8mFdJ4JJS41NlO1hYTYI6jjFFFUM56X7/
-wCApBRRQB1oULaR4AHyjoPYVZtQP3nFFFAH3B+zY7P8HtM3MTteYDJ6Dea+LPi
-CxbxZdEkkm7uck/75oooA527AF1b8fwsf0rJ1A/6VJRRQAtt/qR+NQXPJ/Ciig
-CCpE6UUUAOooooAK/ab/gkX/wAmny/9jDef+gQ0UUAfa9RSf8fEf+638xRRQBL
-RRRQAUUUUAFFFFABRRRQAUUUUAQ3n/Hs/4fzqUdBRRUsli0UUUhBRRRQB/9k="""
+
+IMAGE = """data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAA
+AHgAQMAAAAPH06nAAAAA1BMVEX///+nxBvIAAAAPElEQVR42u3BAQ0AAADCIPu
+nfg43YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwKJfgA
+AHF2U8TAAAAAElFTkSuQmCC"""
+
 
 if __name__ == '__main__':
     main()

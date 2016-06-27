@@ -19,6 +19,7 @@
  *      - browser [string]
  *      - url [string]
  *      - upvote [string]
+ * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
