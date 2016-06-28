@@ -12,6 +12,7 @@
  *        - shot: link to screenshot in S3 [string]
  *        - url: link to browse [string]
  *        - published: utc time published in ms [integer]
+ * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -68,7 +69,7 @@ exports.handle = function handler(event, context) {
       context.fail('Internal Error: Failed to scan browses');
       return;
     }
-    else {
+    if (data.Count > 0) {
       const rsp = data.Items;
       const links = uniq(rsp.map(function (item) {
         return item.url;
@@ -76,7 +77,6 @@ exports.handle = function handler(event, context) {
       const linkObjs = links.map(function (item) {
         return { url: item };
       });
-
       if (linkObjs.length > 0) {
         const batchParams = {
           RequestItems: {
@@ -89,21 +89,22 @@ exports.handle = function handler(event, context) {
          * Get interests for the last 24 hours worth of data
          * from the links table.
          */
-        dynamo.batchGet(batchParams, (err, data) => {
-          if (err) {
+        dynamo.batchGet(batchParams, (batchErr, batchData) => {
+          if (batchErr) {
             context.fail('Internal Error: Failed to batch get interests.');
             return;
-          } else {
-            const links = data.Responses.links.map(function (item) {
-              item.browsers = item.browsers.values;
-              return item;
-            });
-            context.succeed(merge(rsp, links));
           }
+          const links = batchData.Responses.links.map(function (item) {
+            item.browsers = item.browsers.values;
+            return item;
+          });
+          context.succeed(merge(rsp, links));
         });
       } else {
         context.succeed(links);
       }
+    } else {
+      context.succeed([]);
     }
   });
 };

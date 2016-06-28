@@ -1,0 +1,9 @@
+{
+  "name": "get_user_browse_data",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd ../../ && apex invoke getUserBrowseData < functions/getUserBrowseData/event.json && cd functions/getUserBrowseData"
+  }
+}

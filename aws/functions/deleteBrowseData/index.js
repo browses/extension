@@ -1,23 +1,20 @@
 /*
- * addBrowserViewed
+ * deleteBrowseData
  *
- * Add browser to the list of viewers of a particular URL.
- * Browser must be authenticated and send valid token from cognito.
- * The links table contains a list of browsers who have clicked
- * into this particular browse, this functions updates the list
- * with the authenticated browser.
+ * Delete a browse from DynamoDB and S3.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
- * @resource: /links/view
- * @method: POST
+ * @resource: /browses
+ * @method: DELETE
  * @params:
  *      - browser: username [string]
- *      - url: browse URL [string]
+ *      - published: browse URL [string]
+ *      - shot: shot URL [string]
  *      - token: jwt token from cognito [string]
  * @returns:
  *      - browser [string]
  *      - url [string]
- * @test: npm test
+ *      - published [string]
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -25,6 +22,7 @@ const dynamo = new aws.DynamoDB.DocumentClient({ region: 'eu-west-1' });
 const cognito = new aws.CognitoIdentity();
 const settings = require('./settings.json');
 const jwt = require('jsonwebtoken');
+const s3 = new aws.S3();
 
 
 exports.handle = function handler(event, context) {
@@ -32,8 +30,12 @@ exports.handle = function handler(event, context) {
     context.fail('Bad Request: Missing browser parameter');
     return;
   }
-  if (!event.url) {
-    context.fail('Bad Request: Missing url parameter');
+  if (!event.published) {
+    context.fail('Bad Request: Missing published parameter');
+    return;
+  }
+  if (!event.shot) {
+    context.fail('Bad Request: Missing shot parameter');
     return;
   }
   if (!event.token) {
@@ -72,27 +74,39 @@ exports.handle = function handler(event, context) {
       /*
        * Browser validated!
        */
-      const linkParams = {
-        TableName: 'links',
+      const browseParams = {
+        TableName: 'browses',
         Key: {
-          url: event.url,
-        },
-        UpdateExpression: 'ADD browsers :brs',
-        ExpressionAttributeValues: {
-          ':brs': dynamo.createSet([event.browser]),
+          browser: event.browser,
+          published: event.published,
         },
       };
+      if (event.shot.indexOf('browses/') <= -1) {
+        context.fail('Unprocessable Entity: Unrecognised shot url');
+        return;
+      }
+      const s3Params = {
+        Bucket: 'browses',
+        Key: event.shot.split('browses/')[1],
+      };
       /*
-       * Update links table with browsers view.
+       * Delete browse data from browses table.
        */
-      dynamo.update(linkParams, (linkError) => {
-        if (linkError) {
-          context.fail('Internal Error: Failed to update database.');
+      dynamo.delete(browseParams, (browseErr) => {
+        if (browseErr) {
+          context.fail('Internal Error: Failed to delete browse.');
           return;
         }
-        context.succeed({
-          browser: event.browser,
-          url: event.url,
+        s3.deleteObject(s3Params, (s3Err) => {
+          if (s3Err) {
+            context.fail('Internal Error: Failed to delete screenshot');
+            return;
+          }
+          context.succeed({
+            browser: event.browser,
+            shot: event.shot,
+            published: event.published,
+          });
         });
       });
     });

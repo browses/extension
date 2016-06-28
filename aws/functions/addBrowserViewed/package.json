@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "scripts": {
+    "test": "cd ../../ && apex invoke addBrowserViewed < functions/addBrowserViewed/event.json && cd functions/addBrowserViewed"
+  },
   "dependencies": {
     "jsonwebtoken": "^7.0.1"
   }

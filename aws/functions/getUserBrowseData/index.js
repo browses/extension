@@ -11,12 +11,14 @@
  *        - browser: [string]
  *        - shot: link to screenshot in S3 [string]
  *        - url: link to browse [string]
+ *        - published: time this browse was posted in ms [integer]
  *        - published_first_time: utc time published first in ms [integer]
  *        - published_last_time: utc time published last in ms [integer]
  *        - published_first_by: browser who first published [string]
  *        - published_last_by: browser who last published [string]
  *        - title: title of page [string]
  *        - browsers: array of browsers of this link [array][strings]
+ * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -97,25 +99,24 @@ exports.handle = function handler(event, context) {
           if (err) {
             context.fail('Internal Error: Failed to batch get interests');
             return;
-          } else {
-            const links = data.Responses.links.map(function (item) {
-              item.browsers = item.browsers.values;
-              return item;
-            });
-            links = links.map(function (item) {
-              if (item.hasOwnProperty('useful')) {
-                item.useful = item.useful.values;
-              }
-              if (item.hasOwnProperty('interesting')) {
-                item.interesting = item.interesting.values;
-              }
-              if (item.hasOwnProperty('entertaining')) {
-                item.entertaining = item.entertaining.values;
-              }
-              return item;
-            });
-            context.succeed(merge(rsp, links));
           }
+          var links = data.Responses.links.map(function (item) {
+            item.browsers = item.browsers.values;
+            return item;
+          });
+          links = links.map(function (item) {
+            if (item.hasOwnProperty('useful')) {
+              item.useful = item.useful.values;
+            }
+            if (item.hasOwnProperty('interesting')) {
+              item.interesting = item.interesting.values;
+            }
+            if (item.hasOwnProperty('entertaining')) {
+              item.entertaining = item.entertaining.values;
+            }
+            return item;
+          });
+          context.succeed(merge(rsp, links));
         });
       } else {
         context.succeed(links);

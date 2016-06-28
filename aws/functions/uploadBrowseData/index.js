@@ -14,7 +14,7 @@
  *      - shot: browse screenshot [image/jpeg]
  *      - token: jwt token from cognito [string]
  * @returns:
- *      - published_first_time: timestamp browse was published in ms [integer]
+ *      - published: timestamp browse was published in ms [integer]
  *      - browser: username [string]
  *      - url: browse URL [string]
  *      - title: browse title [string]
@@ -98,7 +98,7 @@ exports.handle = function handler(event, context) {
       const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
       const params = {
         Bucket: 'browses',
-        Key: event.browser + '/' + guid,
+        Key: `${event.browser}/${guid}`,
         Body: buf,
         ContentEncoding: 'base64',
         ContentType: 'image/jpeg',
@@ -107,8 +107,8 @@ exports.handle = function handler(event, context) {
       /*
        * Save screenshot image to S3.
        */
-      s3.putObject(params, (err, data) => {
-        if (err) {
+      s3.putObject(params, (s3Err) => {
+        if (s3Err) {
           context.fail('Internal Error: Failed to save screenshot to S3.');
           return;
         }
@@ -118,14 +118,14 @@ exports.handle = function handler(event, context) {
             browser: event.browser,
             published: timestamp,
             url: event.url,
-            shot: 'https://s3-eu-west-1.amazonaws.com/browses/' + event.browser + '/' + guid,
+            shot: `https://s3-eu-west-1.amazonaws.com/browses/${event.browser}/${guid}`,
           },
         };
         /*
          * Store browse data in browses table in DynamoDB.
          */
-        dynamo.put(browseParams, (err, data) => {
-          if (err) {
+        dynamo.put(browseParams, (browseErr) => {
+          if (browseErr) {
             context.fail('Internal Error: Failed to store browse in database.');
             return;
           }
@@ -145,17 +145,17 @@ exports.handle = function handler(event, context) {
           /*
            * Update browse data in links table in DynamoDB.
            */
-          dynamo.update(linkParams, (err, data) => {
-            if (err) {
+          dynamo.update(linkParams, (linkErr) => {
+            if (linkErr) {
               context.fail('Internal Error: Failed to update browse link.');
               return;
             }
             context.succeed({
-              published_first_time: timestamp.toString(),
+              published: timestamp.toString(),
               browser: event.browser,
               url: event.url,
               title: event.title,
-              shot: 'https://s3-eu-west-1.amazonaws.com/browses/' + event.browser + '/' + guid,
+              shot: `https://s3-eu-west-1.amazonaws.com/browses/${event.browser}/${guid}`,
             });
           });
         });
