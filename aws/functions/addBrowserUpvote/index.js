@@ -24,9 +24,7 @@
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
 const dynamo = new aws.DynamoDB.DocumentClient({ region: 'eu-west-1' });
-const cognito = new aws.CognitoIdentity();
-const settings = require('./settings.json');
-const jwt = require('jsonwebtoken');
+const request = require('request');
 
 
 exports.handle = function handler(event, context) {
@@ -47,37 +45,18 @@ exports.handle = function handler(event, context) {
     return;
   }
   /*
-   * Check JWT for authentication.
+   * Validate JSON Web Token.
    */
-  const timestamp = (new Date()).getTime();
-  const decoded = jwt.decode(event.token);
-  if (decoded && decoded.hasOwnProperty('exp') &&
-      decoded.hasOwnProperty('sub')) {
-    const idParams = {
-      IdentityPoolId: settings.identityPoolId,
-      DeveloperUserIdentifier: event.browser,
-      MaxResults: 1,
-    };
-    cognito.lookupDeveloperIdentity(idParams, (idError, idData) => {
-      if (idError) {
-        context.fail('Unprocessable Entity: Browser not registered.');
-        return;
-      }
-      if (!idData.IdentityId) {
-        context.fail('Internal Error: Failed to get identity id');
-        return;
-      }
-      if (idData.IdentityId !== decoded.sub) {
-        context.fail('Unauthorized: Browser and token ID didnt match.');
-        return;
-      }
-      if (decoded.exp <= timestamp / 1000.0) {
-        context.fail('Unauthorized: Token has expired.');
-        return;
-      }
-      /*
-       * Browser validated!
-       */
+  request({
+    url: 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta/validate',
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    json: { username: event.browser, token: event.token, service: 'browses' },
+  }, (error, rsp, body) => {
+    if (!error && rsp.statusCode === 200) {
+      // Successfully validated token
       const linkParams = {
         TableName: 'links',
         Key: {
@@ -88,7 +67,6 @@ exports.handle = function handler(event, context) {
           ':brs': dynamo.createSet([event.browser]),
         },
       };
-
       /*
        * Update links table with browsers interest.
        */
@@ -103,9 +81,9 @@ exports.handle = function handler(event, context) {
           upvote: event.upvote,
         });
       });
-    });
-  } else {
-    context.fail('Unprocessable Entity: Failed to parse token.');
-    return;
-  }
+    } else {
+      context.fail(body);
+      return;
+    }
+  });
 };

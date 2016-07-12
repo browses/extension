@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../ && apex invoke getUserBrowseData < functions/getUserBrowseData/event.json && cd functions/getUserBrowseData"
+    "test": "cd ../../ && apex invoke getUserBrowseData < functions/getUserBrowseData/event.json && cd functions/getUserBrowseData",
+    "deploy": "cd ../../ && apex deploy && cd functions/getUserBrowseData"
   }
 }

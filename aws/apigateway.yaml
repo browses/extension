@@ -1,0 +1,739 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: Browses
+  description: A Social Network of Internet Browsing
+host: execute-api.eu-west-1.amazonaws.com
+basePath: /
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /browses:
+    get:
+      summary: Get Latest Browses
+      description: |
+        Get latest browses from the last 24 hours
+      produces:
+        - application/json
+      tags:
+        - Resources
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_getLatestBrowseData/invocations
+        httpMethod: POST
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/LatestBrowseResponses"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: Upload Browse
+      description: |
+        Upload screenshot and url to S3/DynamoDB
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - Resources
+      parameters:
+        - name: uploadBrowse
+          in: body
+          description: Upload browse data and save screenshot to s3
+          schema:
+            $ref: '#/definitions/UploadBrowse'
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_uploadBrowseData/invocations
+        httpMethod: POST
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unauthorized: .*":
+            statusCode: "401"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unprocessable Entity: .*":
+            statusCode: "422"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/UploadBrowseResponse"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: Unprocessable Entity
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    delete:
+      summary: Delete a Browse
+      description: |
+        Delete screenshot and browse data from S3/DynamoDB
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - Resources
+      parameters:
+        - name: deleteBrowse
+          in: body
+          description: Browse data to delete
+          schema:
+            $ref: '#/definitions/DeleteBrowse'
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_deleteBrowseData/invocations
+        httpMethod: POST
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unauthorized: .*":
+            statusCode: "401"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unprocessable Entity: .*":
+            statusCode: "422"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/DeleteBrowseResponse"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: Unprocessable Entity
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+  /browses/{browser}:
+    get:
+      summary: Get User Browses
+      description: |
+        Get a list of a specific users browses
+      tags:
+        - Resources
+      produces:
+        - application/json
+      parameters:
+        - name: browser
+          in: path
+          description: Browser username
+          required: true
+          type: string
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_getUserBrowseData/invocations
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "browser" : "$input.params('browser')"
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/UserBrowseResponses"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+  /links/upvote:
+    post:
+      summary: Upvote Browse
+      description: |
+        Upvote a particular browse as either useful, interesting or entertaining
+      tags:
+        - Resources
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: upvoteBrowse
+          in: body
+          description: Browse data to upvote
+          schema:
+            $ref: '#/definitions/UpvoteBrowse'
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_addBrowserUpvote/invocations
+        httpMethod: POST
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unauthorized: .*":
+            statusCode: "401"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unprocessable Entity: .*":
+            statusCode: "422"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/UpvoteBrowseResponse"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: Unprocessable Entity
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+  /links/view:
+    post:
+      summary: View a Browse
+      description: |
+        Increment counter each time a browse is viewed by a user
+      tags:
+        - Resources
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: browseViewed
+          in: body
+          description: Browse data of view
+          schema:
+            $ref: "#/definitions/BrowseViewed"
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_addBrowserViewed/invocations
+        httpMethod: POST
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unauthorized: .*":
+            statusCode: "401"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Unprocessable Entity: .*":
+            statusCode: "422"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/BrowseViewedResponse"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: Unprocessable Entity
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
+definitions:
+  Empty:
+    type: object
+  Error:
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
+  LatestBrowseResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      shot:
+        type: string
+        description: link to browse screenshot in s3
+      url:
+        type: string
+        description: link to browse
+      published:
+        type: integer
+        description: timestamp browse was published
+  LatestBrowseResponses:
+    type: array
+    items:
+      $ref: "#/definitions/LatestBrowseResponse"
+  UploadBrowse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      title:
+        type: string
+        description: title of browse webpage
+      shot:
+        type: string
+        description: browse screenshot data as base64 encoded string
+      token:
+        type: string
+        description: json web token
+  UploadBrowseResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      title:
+        type: string
+        description: title of browse webpage
+      shot:
+        type: string
+        description: link to screenshot saved in s3
+      published:
+        type: integer
+        description: timestamp of when browse data was published
+  DeleteBrowse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      shot:
+        type: string
+        description: link to screenshot saved in s3
+      published:
+        type: integer
+        description: timestamp of when browse data was published
+      token:
+        type: string
+        description: json web token
+  DeleteBrowseResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      published:
+        type: integer
+        description: timestamp of when browse data was published
+  UserBrowseResponses:
+    type: array
+    items:
+      $ref: "#/definitions/UserBrowseResponse"
+  UserBrowseResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      shot:
+        type: string
+        description: link to screenshot saved in s3
+      url:
+        type: string
+        description: link to browse
+      published:
+        type: integer
+        description: timestamp of when browse was published
+      published_first_time:
+        type: integer
+        description: timestamp of when browse was first published
+      published_last_time:
+        type: integer
+        description: timestamp of when browse was last published
+      published_first_by:
+        type: string
+        description: browser who first published the browse
+      published_last_by:
+        type: string
+        description: browse who published the browse last
+  UpvoteBrowse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      upvote:
+        type: string
+        description: either useful, interesting or entertaining
+      token:
+        type: string
+        description: json web token
+  UpvoteBrowseResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      upvote:
+        type: string
+        description: either useful, interesting or entertaining
+  BrowseViewed:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse
+      token:
+        type: string
+        description: json web token
+  BrowseViewedResponse:
+    properties:
+      browser:
+        type: string
+        description: browser username
+      url:
+        type: string
+        description: link to browse

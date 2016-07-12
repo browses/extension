@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../ && apex invoke addBrowserUpvote < functions/addBrowserUpvote/event.json && cd functions/addBrowserUpvote"
+    "test": "cd ../../ && apex invoke addBrowserUpvote < functions/addBrowserUpvote/event.json && cd functions/addBrowserUpvote",
+    "deploy": "cd ../../ && apex deploy && cd functions/addBrowserUpvote"
   },
   "dependencies": {
-    "jsonwebtoken": "^7.0.1"
+    "request": "^2.73.0"
   }
 }
