@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../ && apex invoke addBrowserViewed < functions/addBrowserViewed/event.json && cd functions/addBrowserViewed"
+    "test": "cd ../../ && apex invoke addBrowserViewed < functions/addBrowserViewed/event.json && cd functions/addBrowserViewed",
+    "deploy": "cd ../../ && apex deploy && cd functions/addBrowserViewed"
   },
   "dependencies": {
-    "jsonwebtoken": "^7.0.1"
+    "request": "^2.73.0"
   }
 }

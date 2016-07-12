@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../ && apex invoke getLatestBrowseData && cd functions/getLatestBrowseData"
+    "test": "cd ../../ && apex invoke getLatestBrowseData && cd functions/getLatestBrowseData",
+    "deploy": "cd ../../ && apex deploy && cd functions/getLatestBrowseData"
   }
 }

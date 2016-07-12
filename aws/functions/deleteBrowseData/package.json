@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../ && apex invoke deleteBrowseData < functions/deleteBrowseData/event.json && cd functions/deleteBrowseData"
+    "test": "cd ../../ && apex invoke deleteBrowseData < functions/deleteBrowseData/event.json && cd functions/deleteBrowseData",
+    "deploy": "cd ../../ && apex deploy && cd functions/deleteBrowseData"
   },
   "dependencies": {
-    "jsonwebtoken": "^7.0.1"
+    "request": "^2.73.0"
   }
 }
