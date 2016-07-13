@@ -82,7 +82,7 @@ exports.handle = function handler(event, context) {
         });
       });
     } else {
-      context.fail(body);
+      context.fail(body.errorMessage);
       return;
     }
   });
