@@ -11,7 +11,6 @@ const loginnURL = 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta';
 const browseURL = 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta';
 
 describe('browses', function() {
-  var token = "";
   const user = 'joebloggs';
   const pwd = 'salted_hash';
   const service = 'browses';
@@ -19,26 +18,27 @@ describe('browses', function() {
   AHgAQMAAAAPH06nAAAAA1BMVEX///+nxBvIAAAAPElEQVR42u3BAQ0AAADCIPu
   nfg43YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwKJfgA
   AHF2U8TAAAAAElFTkSuQmCC`;
+  const token = 'EAACEdEose0cBAIfpYOIcTdQEneTeW0fHfW67SkX2QVxKqnGkfpM3OUXTBsZA1ZBtSxf4VoiAndLheZCs9ToaOyUp14S3xj4hZBCZC9Qg0COJYeygi9bD1ePWZBKCGsNosfeDHRYwJHUW13GgZA7VM8AbavMXnfbkYwJYIuHLvGK8JHLVGtUmroQ';
   /*
    * Get authentication token before running tests.
    */
-  before(function(done) {
-    const params = {
-      username: user,
-      password: pwd,
-      service: service,
-    };
-    request(loginnURL)
-    .post('/authenticate')
-    .send(params)
-    .end((err, res) => {
-      if (err) {
-        throw err;
-      }
-      token = res.body.token;
-      done();
-    });
-  });
+  // before(function(done) {
+  //   const params = {
+  //     username: user,
+  //     password: pwd,
+  //     service: service,
+  //   };
+  //   request(loginnURL)
+  //   .post('/authenticate')
+  //   .send(params)
+  //   .end((err, res) => {
+  //     if (err) {
+  //       throw err;
+  //     }
+  //     token = res.body.token;
+  //     done();
+  //   });
+  // });
   /*
    * Test we can get the last 24 hours of browses.
    */
@@ -102,7 +102,6 @@ describe('browses', function() {
     describe('testUploadBrowse', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
-          browser: user,
           url: service,
           token: token,
           shot: image,
@@ -136,7 +135,6 @@ describe('browses', function() {
     describe('testAddBrowseUpvote', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
-          browser: user,
           url: service,
           token: token,
           upvote: 'interesting',
@@ -167,7 +165,6 @@ describe('browses', function() {
     describe('testAddBrowseView', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
-          browser: user,
           url: service,
           token: token,
         };
@@ -215,7 +212,6 @@ describe('browses', function() {
     describe('testDeleteBrowse', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
-          browser: user,
           shot: browses[0].shot,
           token: token,
           published: browses[0].published,

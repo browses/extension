@@ -7,10 +7,9 @@
  * @resource: /browses
  * @method: DELETE
  * @params:
- *      - browser: username [string]
  *      - published: browse published timestamp [integer]
  *      - shot: shot URL [string]
- *      - token: jwt token from cognito [string]
+ *      - token: access token from facebook [string]
  * @returns:
  *      - browser [string]
  *      - url [string]
@@ -24,10 +23,6 @@ const request = require('request');
 
 
 exports.handle = function handler(event, context) {
-  if (!event.browser) {
-    context.fail('Bad Request: Missing browser parameter');
-    return;
-  }
   if (!event.published) {
     context.fail('Bad Request: Missing published parameter');
     return;
@@ -44,19 +39,16 @@ exports.handle = function handler(event, context) {
    * Validate JSON Web Token.
    */
   request({
-    url: 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta/validate',
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    json: { username: event.browser, token: event.token, service: 'browses' },
+    url: `https://graph.facebook.com/me?access_token=${event.token}`,
+    method: 'GET',
   }, (error, rsp, body) => {
-    if (!error && rsp.statusCode === 200) {
+    if (!error && rsp.statusCode === 200 && !body.hasOwnProperty('error')) {
       // Successfully validated token
+      const browser = JSON.parse(body).id;
       const browseParams = {
         TableName: 'browses',
         Key: {
-          browser: event.browser,
+          browser,
           published: event.published,
         },
       };
@@ -82,14 +74,14 @@ exports.handle = function handler(event, context) {
             return;
           }
           context.succeed({
-            browser: event.browser,
+            browser,
             shot: event.shot,
             published: event.published,
           });
         });
       });
     } else {
-      context.fail(body.errorMessage);
+      context.fail(body);
       return;
     }
   });

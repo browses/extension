@@ -7,14 +7,13 @@
  * either useful, interesting or entertaining. This function adds
  * the user to the corresponding list associated with this URL.
  *
- * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
+ * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/facebook
  * @resource: /links/upvote
  * @method: POST
  * @params:
- *      - browser: username [string]
  *      - url: browse URL [string]
  *      - upvote: either useful, interesting or entertaining [string]
- *      - token: jwt token from cognito [string]
+ *      - token: access token from facebook [string]
  * @returns:
  *      - browser [string]
  *      - url [string]
@@ -28,10 +27,6 @@ const request = require('request');
 
 
 exports.handle = function handler(event, context) {
-  if (!event.browser) {
-    context.fail('Bad Request: Missing browser parameter');
-    return;
-  }
   if (!event.url) {
     context.fail('Bad Request: Missing url parameter');
     return;
@@ -48,15 +43,12 @@ exports.handle = function handler(event, context) {
    * Validate JSON Web Token.
    */
   request({
-    url: 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta/validate',
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    json: { username: event.browser, token: event.token, service: 'browses' },
+    url: `https://graph.facebook.com/me?access_token=${event.token}`,
+    method: 'GET',
   }, (error, rsp, body) => {
-    if (!error && rsp.statusCode === 200) {
+    if (!error && rsp.statusCode === 200 && !body.hasOwnProperty('error')) {
       // Successfully validated token
+      const browser = JSON.parse(body).id;
       const linkParams = {
         TableName: 'links',
         Key: {
@@ -64,7 +56,7 @@ exports.handle = function handler(event, context) {
         },
         UpdateExpression: `ADD ${event.upvote} :brs, browsers :brs`,
         ExpressionAttributeValues: {
-          ':brs': dynamo.createSet([event.browser]),
+          ':brs': dynamo.createSet([browser]),
         },
       };
       /*
@@ -76,13 +68,13 @@ exports.handle = function handler(event, context) {
           return;
         }
         context.succeed({
-          browser: event.browser,
+          browser,
           url: event.url,
           upvote: event.upvote,
         });
       });
     } else {
-      context.fail(body.errorMessage);
+      context.fail(body);
       return;
     }
   });

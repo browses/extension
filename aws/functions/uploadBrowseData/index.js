@@ -8,11 +8,10 @@
  * @resource: /browses
  * @method: POST
  * @params:
- *      - browser: username [string]
  *      - url: browse URL [string]
  *      - title: browse title [string]
  *      - shot: browse screenshot [image/jpeg]
- *      - token: jwt token from cognito [string]
+ *      - token: access token from facebook [string]
  * @returns:
  *      - published: timestamp browse was published in ms [integer]
  *      - browser: username [string]
@@ -35,10 +34,6 @@ var getGUID = function () {
 
 
 exports.handle = function handler(event, context) {
-  if (!event.browser) {
-    context.fail('Bad Request: Missing browser');
-    return;
-  }
   if (!event.url) {
     context.fail('Bad Request: Missing url parameter.');
     return;
@@ -60,20 +55,17 @@ exports.handle = function handler(event, context) {
    */
   const timestamp = (new Date()).getTime();
   request({
-    url: 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta/validate',
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    json: { username: event.browser, token: event.token, service: 'browses' },
+    url: `https://graph.facebook.com/me?access_token=${event.token}`,
+    method: 'GET',
   }, (error, rsp, body) => {
-    if (!error && rsp.statusCode === 200) {
+    if (!error && rsp.statusCode === 200 && !body.hasOwnProperty('error')) {
       // Successfully validated token
+      const browser = JSON.parse(body).id;
       const guid = getGUID();
       const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
       const params = {
         Bucket: 'browses',
-        Key: `${event.browser}/${guid}`,
+        Key: `${browser}/${guid}`,
         Body: buf,
         ContentEncoding: 'base64',
         ContentType: 'image/jpeg',
@@ -90,10 +82,10 @@ exports.handle = function handler(event, context) {
         const browseParams = {
           TableName: 'browses',
           Item: {
-            browser: event.browser,
+            browser,
             published: timestamp,
             url: event.url,
-            shot: `https://s3-eu-west-1.amazonaws.com/browses/${event.browser}/${guid}`,
+            shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
           },
         };
         /*
@@ -112,8 +104,8 @@ exports.handle = function handler(event, context) {
             UpdateExpression: 'ADD browsers :brs SET title = :tle, published_last_by = :brw, published_last_time = :ts, published_first_by = if_not_exists(published_first_by, :brw), published_first_time = if_not_exists(published_first_time, :ts)',
             ExpressionAttributeValues: {
               ':tle': event.title.toString(),
-              ':brs': dynamo.createSet([event.browser]),
-              ':brw': event.browser,
+              ':brs': dynamo.createSet([browser]),
+              ':brw': browser,
               ':ts': timestamp,
             },
           };
@@ -126,17 +118,17 @@ exports.handle = function handler(event, context) {
               return;
             }
             context.succeed({
+              browser,
               published: timestamp.toString(),
-              browser: event.browser,
               url: event.url,
               title: event.title,
-              shot: `https://s3-eu-west-1.amazonaws.com/browses/${event.browser}/${guid}`,
+              shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
             });
           });
         });
       });
     } else {
-      context.fail(body.errorMessage);
+      context.fail(body);
       return;
     }
   });

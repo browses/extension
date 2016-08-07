@@ -8,7 +8,7 @@
  * @method: GET
  * @returns:
  *      - Array:
- *        - browser: [string]
+ *        - browser: facebook user id [string]
  *        - shot: link to screenshot in S3 [string]
  *        - url: link to browse [string]
  *        - published: time this browse was posted in ms [integer]
