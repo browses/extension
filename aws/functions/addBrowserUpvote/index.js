@@ -7,7 +7,7 @@
  * either useful, interesting or entertaining. This function adds
  * the user to the corresponding list associated with this URL.
  *
- * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/facebook
+ * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
  * @resource: /links/upvote
  * @method: POST
  * @params:
@@ -46,35 +46,41 @@ exports.handle = function handler(event, context) {
     url: `https://graph.facebook.com/me?access_token=${event.token}`,
     method: 'GET',
   }, (error, rsp, body) => {
-    if (!error && rsp.statusCode === 200 && !body.hasOwnProperty('error')) {
-      // Successfully validated token
-      const browser = JSON.parse(body).id;
-      const linkParams = {
-        TableName: 'links',
-        Key: {
-          url: event.url,
-        },
-        UpdateExpression: `ADD ${event.upvote} :brs, browsers :brs`,
-        ExpressionAttributeValues: {
-          ':brs': dynamo.createSet([browser]),
-        },
-      };
-      /*
-       * Update links table with browsers interest.
-       */
-      dynamo.update(linkParams, (linkErr) => {
-        if (linkErr) {
-          context.fail('Internal Error: Failed to update database.');
-          return;
-        }
-        context.succeed({
-          browser,
-          url: event.url,
-          upvote: event.upvote,
+    if (!error && rsp.statusCode === 200) {
+      if (!body.hasOwnProperty('error')) {
+        // Successfully validated token
+        const browser = JSON.parse(body).id;
+        const linkParams = {
+          TableName: 'links',
+          Key: {
+            url: event.url,
+          },
+          UpdateExpression: `ADD ${event.upvote} :brs, browsers :brs`,
+          ExpressionAttributeValues: {
+            ':brs': dynamo.createSet([browser]),
+          },
+        };
+        /*
+         * Update links table with browsers interest.
+         */
+        dynamo.update(linkParams, (linkErr) => {
+          if (linkErr) {
+            context.fail('Internal Error: Failed to update database.');
+            return;
+          }
+          context.succeed({
+            browser,
+            url: event.url,
+            upvote: event.upvote,
+          });
         });
-      });
+      } else {
+        const resp = JSON.parse(body);
+        context.fail(`Unprocessable Entity: ${resp.error.message}`);
+        return;
+      }
     } else {
-      context.fail(body);
+      context.fail('Internal Error: Failed to authorise with Facebook');
       return;
     }
   });

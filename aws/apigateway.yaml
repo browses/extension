@@ -606,9 +606,6 @@ definitions:
       $ref: "#/definitions/LatestBrowseResponse"
   UploadBrowse:
     properties:
-      browser:
-        type: string
-        description: browser username
       url:
         type: string
         description: link to browse
@@ -640,9 +637,6 @@ definitions:
         description: timestamp of when browse data was published
   DeleteBrowse:
     properties:
-      browser:
-        type: string
-        description: browser username
       shot:
         type: string
         description: link to screenshot saved in s3
@@ -695,9 +689,6 @@ definitions:
         description: browse who published the browse last
   UpvoteBrowse:
     properties:
-      browser:
-        type: string
-        description: browser username
       url:
         type: string
         description: link to browse
@@ -720,9 +711,6 @@ definitions:
         description: either useful, interesting or entertaining
   BrowseViewed:
     properties:
-      browser:
-        type: string
-        description: browser username
       url:
         type: string
         description: link to browse

@@ -58,77 +58,83 @@ exports.handle = function handler(event, context) {
     url: `https://graph.facebook.com/me?access_token=${event.token}`,
     method: 'GET',
   }, (error, rsp, body) => {
-    if (!error && rsp.statusCode === 200 && !body.hasOwnProperty('error')) {
-      // Successfully validated token
-      const browser = JSON.parse(body).id;
-      const guid = getGUID();
-      const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-      const params = {
-        Bucket: 'browses',
-        Key: `${browser}/${guid}`,
-        Body: buf,
-        ContentEncoding: 'base64',
-        ContentType: 'image/jpeg',
-        ACL: 'public-read',
-      };
-      /*
-       * Save screenshot image to S3.
-       */
-      s3.putObject(params, (s3Err) => {
-        if (s3Err) {
-          context.fail('Internal Error: Failed to save screenshot to S3.');
-          return;
-        }
-        const browseParams = {
-          TableName: 'browses',
-          Item: {
-            browser,
-            published: timestamp,
-            url: event.url,
-            shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
-          },
+    if (!error && rsp.statusCode === 200) {
+      if (!body.hasOwnProperty('error')) {
+        // Successfully validated token
+        const browser = JSON.parse(body).id;
+        const guid = getGUID();
+        const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        const params = {
+          Bucket: 'browses',
+          Key: `${browser}/${guid}`,
+          Body: buf,
+          ContentEncoding: 'base64',
+          ContentType: 'image/jpeg',
+          ACL: 'public-read',
         };
         /*
-         * Store browse data in browses table in DynamoDB.
+         * Save screenshot image to S3.
          */
-        dynamo.put(browseParams, (browseErr) => {
-          if (browseErr) {
-            context.fail('Internal Error: Failed to store browse in database.');
+        s3.putObject(params, (s3Err) => {
+          if (s3Err) {
+            context.fail('Internal Error: Failed to save screenshot to S3.');
             return;
           }
-          const linkParams = {
-            TableName: 'links',
-            Key: {
+          const browseParams = {
+            TableName: 'browses',
+            Item: {
+              browser,
+              published: timestamp,
               url: event.url,
-            },
-            UpdateExpression: 'ADD browsers :brs SET title = :tle, published_last_by = :brw, published_last_time = :ts, published_first_by = if_not_exists(published_first_by, :brw), published_first_time = if_not_exists(published_first_time, :ts)',
-            ExpressionAttributeValues: {
-              ':tle': event.title.toString(),
-              ':brs': dynamo.createSet([browser]),
-              ':brw': browser,
-              ':ts': timestamp,
+              shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
             },
           };
           /*
-           * Update browse data in links table in DynamoDB.
+           * Store browse data in browses table in DynamoDB.
            */
-          dynamo.update(linkParams, (linkErr) => {
-            if (linkErr) {
-              context.fail('Internal Error: Failed to update browse link.');
+          dynamo.put(browseParams, (browseErr) => {
+            if (browseErr) {
+              context.fail('Internal Error: Failed to store browse in database.');
               return;
             }
-            context.succeed({
-              browser,
-              published: timestamp.toString(),
-              url: event.url,
-              title: event.title,
-              shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
+            const linkParams = {
+              TableName: 'links',
+              Key: {
+                url: event.url,
+              },
+              UpdateExpression: 'ADD browsers :brs SET title = :tle, published_last_by = :brw, published_last_time = :ts, published_first_by = if_not_exists(published_first_by, :brw), published_first_time = if_not_exists(published_first_time, :ts)',
+              ExpressionAttributeValues: {
+                ':tle': event.title.toString(),
+                ':brs': dynamo.createSet([browser]),
+                ':brw': browser,
+                ':ts': timestamp,
+              },
+            };
+            /*
+             * Update browse data in links table in DynamoDB.
+             */
+            dynamo.update(linkParams, (linkErr) => {
+              if (linkErr) {
+                context.fail('Internal Error: Failed to update browse link.');
+                return;
+              }
+              context.succeed({
+                browser,
+                published: timestamp.toString(),
+                url: event.url,
+                title: event.title,
+                shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
+              });
             });
           });
         });
-      });
+      } else {
+        const resp = JSON.parse(body);
+        context.fail(`Unprocessable Entity: ${resp.error.message}`);
+        return;
+      }
     } else {
-      context.fail(body);
+      context.fail('Internal Error: Failed to authorise with Facebook');
       return;
     }
   });
