@@ -14,7 +14,8 @@
  *      - url: browse URL [string]
  *      - token: access token from facebook [string]
  * @returns:
- *      - browser [string]
+ *      - browser: Facebook ID [string]
+ *      - name: Facebook name [string]
  *      - url [string]
  * @test: npm test
  */
@@ -44,6 +45,7 @@ exports.handle = function handler(event, context) {
       if (!body.hasOwnProperty('error')) {
         // Successfully validated token
         const browser = JSON.parse(body).id;
+        const name = JSON.parse(body).name;
         const linkParams = {
           TableName: 'links',
           Key: {
@@ -63,6 +65,7 @@ exports.handle = function handler(event, context) {
             return;
           }
           context.succeed({
+            name,
             browser,
             url: event.url,
           });

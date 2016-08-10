@@ -620,9 +620,12 @@ definitions:
         description: json web token
   UploadBrowseResponse:
     properties:
+      name:
+        type: string
+        description: facebook name
       browser:
         type: string
-        description: browser username
+        description: facebook id
       url:
         type: string
         description: link to browse
@@ -648,9 +651,12 @@ definitions:
         description: json web token
   DeleteBrowseResponse:
     properties:
+      name:
+        type: string
+        description: facebook name
       browser:
         type: string
-        description: browser username
+        description: facebook id
       url:
         type: string
         description: link to browse
@@ -700,9 +706,12 @@ definitions:
         description: json web token
   UpvoteBrowseResponse:
     properties:
+      name:
+        type: string
+        description: facebook name
       browser:
         type: string
-        description: browser username
+        description: facebook id
       url:
         type: string
         description: link to browse
@@ -719,9 +728,12 @@ definitions:
         description: json web token
   BrowseViewedResponse:
     properties:
+      name:
+        type: string
+        description: facebook name
       browser:
         type: string
-        description: browser username
+        description: facebook id
       url:
         type: string
         description: link to browse

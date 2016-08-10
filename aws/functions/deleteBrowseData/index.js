@@ -11,7 +11,8 @@
  *      - shot: shot URL [string]
  *      - token: access token from facebook [string]
  * @returns:
- *      - browser [string]
+ *      - browser: Facebook ID [string]
+ *      - name: Facebook name [string]
  *      - url [string]
  *      - published [integer]
  */
@@ -46,6 +47,7 @@ exports.handle = function handler(event, context) {
       if (!body.hasOwnProperty('error')) {
         // Successfully validated token
         const browser = JSON.parse(body).id;
+        const name = JSON.parse(body).name;
         const browseParams = {
           TableName: 'browses',
           Key: {
@@ -75,6 +77,7 @@ exports.handle = function handler(event, context) {
               return;
             }
             context.succeed({
+              name,
               browser,
               shot: event.shot,
               published: event.published,

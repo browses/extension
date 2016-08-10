@@ -14,7 +14,8 @@
  *      - token: access token from facebook [string]
  * @returns:
  *      - published: timestamp browse was published in ms [integer]
- *      - browser: username [string]
+ *      - browser: Facebook ID [string]
+ *      - name: Facebook name [string]
  *      - url: browse URL [string]
  *      - title: browse title [string]
  *      - shot: link to S3 store of image [string]
@@ -62,6 +63,7 @@ exports.handle = function handler(event, context) {
       if (!body.hasOwnProperty('error')) {
         // Successfully validated token
         const browser = JSON.parse(body).id;
+        const name = JSON.parse(body).name;
         const guid = getGUID();
         const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         const params = {
@@ -119,6 +121,7 @@ exports.handle = function handler(event, context) {
                 return;
               }
               context.succeed({
+                name,
                 browser,
                 published: timestamp.toString(),
                 url: event.url,
