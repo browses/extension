@@ -11,9 +11,8 @@
  * @resource: /links/view
  * @method: POST
  * @params:
- *      - browser: username [string]
  *      - url: browse URL [string]
- *      - token: jwt token from cognito [string]
+ *      - token: access token from facebook [string]
  * @returns:
  *      - browser [string]
  *      - url [string]
@@ -26,10 +25,6 @@ const request = require('request');
 
 
 exports.handle = function handler(event, context) {
-  if (!event.browser) {
-    context.fail('Bad Request: Missing browser parameter');
-    return;
-  }
   if (!event.url) {
     context.fail('Bad Request: Missing url parameter');
     return;
@@ -42,40 +37,43 @@ exports.handle = function handler(event, context) {
    * Validate JSON Web Token.
    */
   request({
-    url: 'https://7ibd5w7y69.execute-api.eu-west-1.amazonaws.com/beta/validate',
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    json: { username: event.browser, token: event.token, service: 'browses' },
+    url: `https://graph.facebook.com/me?access_token=${event.token}`,
+    method: 'GET',
   }, (error, rsp, body) => {
     if (!error && rsp.statusCode === 200) {
-      // Successfully validated token
-      const linkParams = {
-        TableName: 'links',
-        Key: {
-          url: event.url,
-        },
-        UpdateExpression: 'ADD browsers :brs',
-        ExpressionAttributeValues: {
-          ':brs': dynamo.createSet([event.browser]),
-        },
-      };
-      /*
-       * Update links table with browsers view.
-       */
-      dynamo.update(linkParams, (linkError) => {
-        if (linkError) {
-          context.fail('Internal Error: Failed to update database.');
-          return;
-        }
-        context.succeed({
-          browser: event.browser,
-          url: event.url,
+      if (!body.hasOwnProperty('error')) {
+        // Successfully validated token
+        const browser = JSON.parse(body).id;
+        const linkParams = {
+          TableName: 'links',
+          Key: {
+            url: event.url,
+          },
+          UpdateExpression: 'ADD browsers :brs',
+          ExpressionAttributeValues: {
+            ':brs': dynamo.createSet([browser]),
+          },
+        };
+        /*
+         * Update links table with browsers view.
+         */
+        dynamo.update(linkParams, (linkError) => {
+          if (linkError) {
+            context.fail('Internal Error: Failed to update database.');
+            return;
+          }
+          context.succeed({
+            browser,
+            url: event.url,
+          });
         });
-      });
+      } else {
+        const resp = JSON.parse(body);
+        context.fail(`Unprocessable Entity: ${resp.error.message}`);
+        return;
+      }
     } else {
-      context.fail(body.errorMessage);
+      context.fail('Internal Error: Failed to authorise with Facebook');
       return;
     }
   });
