@@ -71,6 +71,7 @@ describe('browses', function() {
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
           res.body.should.have.property('browser');
+          res.body.should.have.property('name');
           res.body.should.have.property('url');
           res.body.should.have.property('title');
           res.body.should.have.property('shot');
@@ -159,6 +160,7 @@ describe('browses', function() {
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
           res.body.should.have.property('browser');
+          res.body.should.have.property('name');
           res.body.should.have.property('url');
           res.body.should.have.property('upvote');
           done();
@@ -188,6 +190,7 @@ describe('browses', function() {
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
           res.body.should.have.property('browser');
+          res.body.should.have.property('name');
           res.body.should.have.property('url');
           done();
         });
@@ -236,6 +239,7 @@ describe('browses', function() {
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
           res.body.should.have.property('browser');
+          res.body.should.have.property('name');
           res.body.should.have.property('shot');
           res.body.should.have.property('published');
           done();
