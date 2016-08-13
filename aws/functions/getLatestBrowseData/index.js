@@ -8,7 +8,9 @@
  * @method: GET
  * @returns:
  *      - Array:
- *        - browser: [string]
+ *        - id: browse id [string]
+ *        - browser: Facebook id [string]
+ *        - name: Facebook name [string]
  *        - shot: link to screenshot in S3 [string]
  *        - url: link to browse [string]
  *        - published: utc time published in ms [integer]
@@ -22,33 +24,30 @@ const dynamo = new aws.DynamoDB.DocumentClient({ region: 'eu-west-1' });
  * Remove duplicates from an array.
  */
 function uniq(a) {
-  return a.sort().filter(function(item, pos, ary) {
-    return !pos || item !== ary[pos - 1];
-  });
-}
-
-/*
- * Merge two objects.
- */
-function extend(a, b) {
-  for (var key in b) {
-    if (b.hasOwnProperty(key)) {
-      a[key] = b[key];
-    }
-  }
-  return a;
+  return a.sort().filter((item, pos, ary) => !pos || item !== ary[pos - 1]);
 }
 
 /*
  * Merge browses and links.
  */
 function merge(browses, links) {
-  return browses.map(function (browse) {
-    const link = links.filter(function (l) {
-      return l.url === browse.url;
-    });
-    return extend(browse, link[0]);
+  return browses.map((browse) => {
+    const link = links.filter((l) => l.url === browse.url);
+    return Object.assign(browse, link[0]);
   });
+}
+
+/*
+ * Convert from amazon array data types.
+ */
+function convert(data, items) {
+  const newData = data;
+  items.forEach(item => {
+    if (data.hasOwnProperty(item)) {
+      newData[item] = data[item].values;
+    }
+  });
+  return newData;
 }
 
 exports.handle = function handler(event, context) {
@@ -70,12 +69,11 @@ exports.handle = function handler(event, context) {
       return;
     }
     if (data.Count > 0) {
-      const rsp = data.Items;
-      const links = uniq(rsp.map(function (item) {
-        return item.url;
-      }));
-      const linkObjs = links.map(function (item) {
-        return { url: item };
+      const browses = data.Items;
+      const links = uniq(browses.map((item) => item.url));
+      const linkObjs = links.map((item) => {
+        const obj = { url: item };
+        return obj;
       });
       if (linkObjs.length > 0) {
         const batchParams = {
@@ -94,11 +92,11 @@ exports.handle = function handler(event, context) {
             context.fail('Internal Error: Failed to batch get interests.');
             return;
           }
-          const links = batchData.Responses.links.map(function (item) {
-            item.browsers = item.browsers.values;
-            return item;
+          const linkData = [];
+          batchData.Responses.links.forEach(link => {
+            linkData.push(convert(link, ['browsers', 'interesting', 'useful', 'entertaining']));
           });
-          context.succeed(merge(rsp, links));
+          context.succeed(merge(browses, linkData));
         });
       } else {
         context.succeed(links);

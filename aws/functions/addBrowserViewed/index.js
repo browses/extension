@@ -65,8 +65,8 @@ exports.handle = function handler(event, context) {
             return;
           }
           context.succeed({
-            name,
             browser,
+            name,
             url: event.url,
           });
         });

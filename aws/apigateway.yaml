@@ -588,9 +588,15 @@ definitions:
         type: string
   LatestBrowseResponse:
     properties:
+      id:
+        type: string
+        description: browse id
       browser:
         type: string
-        description: browser username
+        description: facebook id
+      name:
+        type: string
+        description: facebook name
       shot:
         type: string
         description: link to browse screenshot in s3
@@ -617,15 +623,18 @@ definitions:
         description: browse screenshot data as base64 encoded string
       token:
         type: string
-        description: json web token
+        description: facebook access token
   UploadBrowseResponse:
     properties:
-      name:
+      id:
         type: string
-        description: facebook name
+        description: browse id
       browser:
         type: string
         description: facebook id
+      name:
+        type: string
+        description: facebook name
       url:
         type: string
         description: link to browse
@@ -637,41 +646,41 @@ definitions:
         description: link to screenshot saved in s3
       published:
         type: integer
-        description: timestamp of when browse data was published
+        description: timestamp of when browse data was published (ms)
   DeleteBrowse:
     properties:
-      shot:
+      id:
         type: string
-        description: link to screenshot saved in s3
-      published:
-        type: integer
-        description: timestamp of when browse data was published
+        description: browse id
       token:
         type: string
-        description: json web token
+        description: facebook access token
   DeleteBrowseResponse:
     properties:
-      name:
+      id:
         type: string
-        description: facebook name
+        description: browse id
       browser:
         type: string
         description: facebook id
-      url:
+      name:
         type: string
-        description: link to browse
-      published:
-        type: integer
-        description: timestamp of when browse data was published
+        description: facebook name
   UserBrowseResponses:
     type: array
     items:
       $ref: "#/definitions/UserBrowseResponse"
   UserBrowseResponse:
     properties:
+      id:
+        type: string
+        description: browse id
       browser:
         type: string
-        description: browser username
+        description: facebook id
+      name:
+        type: string
+        description: facebook name
       shot:
         type: string
         description: link to screenshot saved in s3
@@ -703,15 +712,15 @@ definitions:
         description: either useful, interesting or entertaining
       token:
         type: string
-        description: json web token
+        description: facebook access token
   UpvoteBrowseResponse:
     properties:
-      name:
-        type: string
-        description: facebook name
       browser:
         type: string
         description: facebook id
+      name:
+        type: string
+        description: facebook name
       url:
         type: string
         description: link to browse
@@ -725,15 +734,15 @@ definitions:
         description: link to browse
       token:
         type: string
-        description: json web token
+        description: facebook access token
   BrowseViewedResponse:
     properties:
-      name:
-        type: string
-        description: facebook name
       browser:
         type: string
         description: facebook id
+      name:
+        type: string
+        description: facebook name
       url:
         type: string
         description: link to browse

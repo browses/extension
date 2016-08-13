@@ -25,6 +25,7 @@ const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
 const dynamo = new aws.DynamoDB.DocumentClient({ region: 'eu-west-1' });
 const request = require('request');
+const options = ['interesting', 'entertaining', 'useful'];
 
 
 exports.handle = function handler(event, context) {
@@ -34,15 +35,20 @@ exports.handle = function handler(event, context) {
   }
   if (!event.upvote) {
     context.fail('Bad Request: Missing upvote parameter, either useful ' +
-                 'interesting, or entertaining');
+                 'interesting or entertaining');
     return;
   }
   if (!event.token) {
     context.fail('Bad Request: Missing token parameter');
     return;
   }
+  if (options.indexOf(event.upvote) <= -1) {
+    context.fail('Bad Request: upvote parameter must be either useful, ' +
+                 'interesting or entertaining');
+    return;
+  }
   /*
-   * Validate JSON Web Token.
+   * Validate access token, and get Facebook ID and name.
    */
   request({
     url: `https://graph.facebook.com/me?access_token=${event.token}`,
@@ -72,8 +78,8 @@ exports.handle = function handler(event, context) {
             return;
           }
           context.succeed({
-            name,
             browser,
+            name,
             url: event.url,
             upvote: event.upvote,
           });

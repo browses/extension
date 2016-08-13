@@ -1,8 +1,7 @@
 /*
  * uploadBrowseData
  *
- * Upload a browse. Browser must be authenticated and send a valid
- * jwt token from cognito.
+ * Upload a browse. Browser must send a valid access token from Facebook.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
  * @resource: /browses
@@ -13,9 +12,10 @@
  *      - shot: browse screenshot [image/jpeg]
  *      - token: access token from facebook [string]
  * @returns:
- *      - published: timestamp browse was published in ms [integer]
+ *      - id: browse ID [string]
  *      - browser: Facebook ID [string]
  *      - name: Facebook name [string]
+ *      - published: timestamp browse was published in ms [integer]
  *      - url: browse URL [string]
  *      - title: browse title [string]
  *      - shot: link to S3 store of image [string]
@@ -26,9 +26,10 @@ const dynamo = new aws.DynamoDB.DocumentClient({ region: 'eu-west-1' });
 const s3 = new aws.S3();
 const request = require('request');
 
-var getGUID = function () {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+const getGUID = function guid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 };
@@ -52,7 +53,7 @@ exports.handle = function handler(event, context) {
     return;
   }
   /*
-   * Validate JSON Web Token.
+   * Validate access token, and get Facebook ID and name.
    */
   const timestamp = (new Date()).getTime();
   request({
@@ -62,8 +63,9 @@ exports.handle = function handler(event, context) {
     if (!error && rsp.statusCode === 200) {
       if (!body.hasOwnProperty('error')) {
         // Successfully validated token
-        const browser = JSON.parse(body).id;
-        const name = JSON.parse(body).name;
+        const response = JSON.parse(body);
+        const browser = response.id;
+        const name = response.name;
         const guid = getGUID();
         const buf = new Buffer(event.shot.replace(/^data:image\/\w+;base64,/, ''), 'base64');
         const params = {
@@ -85,7 +87,9 @@ exports.handle = function handler(event, context) {
           const browseParams = {
             TableName: 'browses',
             Item: {
+              id: guid,
               browser,
+              name,
               published: timestamp,
               url: event.url,
               shot: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
@@ -99,17 +103,25 @@ exports.handle = function handler(event, context) {
               context.fail('Internal Error: Failed to store browse in database.');
               return;
             }
+            const expr = 'ADD browsers :brs SET title = :tle, published_last_by = :brw, ' +
+                         'published_last_time = :ts, published_first_by = ' +
+                         'if_not_exists(published_first_by, :brw), ' +
+                         'published_first_time = if_not_exists(published_first_time, :ts), ' +
+                         'interesting = if_not_exists(interesting, :init), ' +
+                         'useful = if_not_exists(useful, :init), ' +
+                         'entertaining = if_not_exists(entertaining, :init)';
             const linkParams = {
               TableName: 'links',
               Key: {
                 url: event.url,
               },
-              UpdateExpression: 'ADD browsers :brs SET title = :tle, published_last_by = :brw, published_last_time = :ts, published_first_by = if_not_exists(published_first_by, :brw), published_first_time = if_not_exists(published_first_time, :ts)',
+              UpdateExpression: expr,
               ExpressionAttributeValues: {
                 ':tle': event.title.toString(),
                 ':brs': dynamo.createSet([browser]),
                 ':brw': browser,
                 ':ts': timestamp,
+                ':init': [],
               },
             };
             /*
@@ -121,8 +133,9 @@ exports.handle = function handler(event, context) {
                 return;
               }
               context.succeed({
-                name,
+                id: guid,
                 browser,
+                name,
                 published: timestamp.toString(),
                 url: event.url,
                 title: event.title,
