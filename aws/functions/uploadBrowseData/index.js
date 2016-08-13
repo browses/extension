@@ -150,7 +150,7 @@ exports.handle = function handler(event, context) {
         return;
       }
     } else {
-      context.fail('Internal Error: Failed to authorise with Facebook');
+      context.fail('Unauthorized: Failed to validate access token');
       return;
     }
   });

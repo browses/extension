@@ -2,7 +2,7 @@
  * addBrowserViewed
  *
  * Add browser to the list of viewers of a particular URL.
- * Browser must be authenticated and send valid token from cognito.
+ * Browser must send valid Facebook access token.
  * The links table contains a list of browsers who have clicked
  * into this particular browse, this functions updates the list
  * with the authenticated browser.
@@ -35,7 +35,7 @@ exports.handle = function handler(event, context) {
     return;
   }
   /*
-   * Validate JSON Web Token.
+   * Validate access token and get Facebook ID and name.
    */
   request({
     url: `https://graph.facebook.com/me?access_token=${event.token}`,
@@ -76,7 +76,7 @@ exports.handle = function handler(event, context) {
         return;
       }
     } else {
-      context.fail('Internal Error: Failed to authorise with Facebook');
+      context.fail('Unauthorized: Failed to validate access token');
       return;
     }
   });

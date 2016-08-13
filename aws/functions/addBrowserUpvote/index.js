@@ -2,8 +2,8 @@
  * addBrowserUpvote
  *
  * Save browser's interest in a particular URL. Browser must
- * be authenticated and send a valid jwt token from cognito.
- * The links table  contains a list of users who find the browse
+ * send a valid Facebook access token.
+ * The links table contains a list of users who find the browse
  * either useful, interesting or entertaining. This function adds
  * the user to the corresponding list associated with this URL.
  *
@@ -90,7 +90,7 @@ exports.handle = function handler(event, context) {
         return;
       }
     } else {
-      context.fail('Internal Error: Failed to authorise with Facebook');
+      context.fail('Unauthorized: Failed to validate access token');
       return;
     }
   });
