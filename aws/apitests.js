@@ -10,8 +10,9 @@ const request = require('supertest');
 
 describe('browses', function() {
   const url = 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta';
-  const appId = '509258605951475';
-  const secret = '1cbcd4c805fec6f7dbc030d24eeab9cd';
+  const s3URL = 'https://s3-eu-west-1.amazonaws.com/browses/';
+  const appId = '1659456037715738';
+  const secret = '7f02b4a9d73f9ca20603ace52f421158';
   const service = 'browses';
   const image = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAA
   AHgAQMAAAAPH06nAAAAA1BMVEX///+nxBvIAAAAPElEQVR42u3BAQ0AAADCIPu
@@ -19,6 +20,7 @@ describe('browses', function() {
   AHF2U8TAAAAAElFTkSuQmCC`;
   var token = '';
   var browser = '';
+  var browseID = '';
   /*
    * Get authentication token before running tests.
    */
@@ -70,13 +72,20 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
+          res.body.should.have.property('id');
           res.body.should.have.property('browser');
           res.body.should.have.property('name');
           res.body.should.have.property('url');
           res.body.should.have.property('title');
           res.body.should.have.property('shot');
           res.body.should.have.property('published');
-          done();
+          browseID = res.body.id;
+          request(s3URL)
+          .get(`${browser}/${browseID}`)
+          .end((shotErr, shotRes) => {
+            shotRes.status.should.be.equal(200);
+            done();
+          });
         });
       });
     });
@@ -97,11 +106,16 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Array);
-          if (res.body.length > 0) {
-            res.body[0].should.have.property('browser');
-            res.body[0].should.have.property('shot');
-            res.body[0].should.have.property('url');
-          }
+          res.body[0].should.have.property('id');
+          res.body[0].should.have.property('browser');
+          res.body[0].should.have.property('name');
+          res.body[0].should.have.property('shot');
+          res.body[0].should.have.property('url');
+          res.body[0].should.have.property('published');
+          const ids = res.body.map((items) => items.id);
+          const browsers = res.body.map((items) => items.browser);
+          ids.should.containEql(browseID);
+          browsers.should.containEql(browser);
           done();
         });
       });
@@ -123,7 +137,9 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Array);
+          res.body[0].should.have.property('id');
           res.body[0].should.have.property('browser');
+          res.body[0].should.have.property('name');
           res.body[0].should.have.property('shot');
           res.body[0].should.have.property('url');
           res.body[0].should.have.property('title');
@@ -132,6 +148,8 @@ describe('browses', function() {
           res.body[0].should.have.property('published_first_time');
           res.body[0].should.have.property('published_last_by');
           res.body[0].should.have.property('published_last_time');
+          const ids = res.body.map((items) => items.id);
+          ids.should.containEql(browseID);
           done();
         });
       });
@@ -223,9 +241,8 @@ describe('browses', function() {
     describe('testDeleteBrowse', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
+          id: browses[0].id,
           token,
-          shot: browses[0].shot,
-          published: browses[0].published,
         };
         request(url)
         .delete('/browses')
@@ -238,11 +255,15 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
+          res.body.should.have.property('id');
           res.body.should.have.property('browser');
           res.body.should.have.property('name');
-          res.body.should.have.property('shot');
-          res.body.should.have.property('published');
-          done();
+          request(s3URL)
+          .get(`${browser}/${browseID}`)
+          .end((shotErr, shotRes) => {
+            shotRes.status.should.not.be.equal(200);
+            done();
+          });
         });
       });
     });
