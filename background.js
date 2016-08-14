@@ -97,7 +97,8 @@ const checkAuth = () => new Promise((resolve, reject) => {
 });
 
 const captureBrowse = () => Promise.all([
-  takeScreenshot(), getActiveTab()
+  takeScreenshot(),
+  getActiveTab()
 ])
 .then(data => {
   storeBrowse(data);

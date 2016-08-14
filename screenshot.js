@@ -43,7 +43,7 @@ function timeSince(date) {
 
 var xhr = new XMLHttpRequest();
 
-var browseItemComponent = function (browse) {
+var browseItem = function (browse) {
   return `
     <browse->
       <a target="_blank" href="${browse.url}">
@@ -58,19 +58,17 @@ var browseItemComponent = function (browse) {
   `;
 };
 
-xhr.onreadystatechange = function() {
-  if (xhr.readyState === 4) {
-    var feed = document.querySelector('browses-feed');
-    var browses = JSON.parse(xhr.responseText);
-    var templates = browses.map(function(browse) {
-      return browseItemComponent(browse);
-    });
+var $feed = document.querySelector('browses-feed');
+var $user = document.querySelector('user-name h1');
 
-    feed.innerHTML = templates.sort(dynamicSort('published')).join('');
-  }
-};
+$user.innerHTML = getQueryVariable('browser');
 
-xhr.open('GET', `https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses/${getQueryVariable('browser')}`, true);
-xhr.send();
-
-document.querySelector('user-name h1').innerHTML = getQueryVariable('browser');
+fetch(`https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses/${getQueryVariable('browser')}`)
+.then(data => data.json())
+.then(data => data.sort((a, b) => {
+  if (a.published > b.published) { return 1; }
+  if (a.published < b.published) { return -1; }
+  return 0;
+}))
+.then(data => data.reverse().map(browseItem))
+.then(data => $feed.innerHTML = data.join(''))

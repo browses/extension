@@ -3,22 +3,20 @@
 <head>
 	<style>
 		* {
+			display: block;
 			box-sizing: border-box;
+		}
+		head, script {
+			display: none;
 		}
 		browses-feed {
 			width: 100%;
 			min-height: 100vh;
-			display: flex;
-			flex-flow: row wrap;
 			font-size: 10px;
-			justify-content: center;
-			align-items: center;
 			padding: 0 4rem 4rem 0;
 		}
-
 		browse- {
 			max-width: 100%;
-			flex: 40%;
 			margin: 4rem 0 0 4rem;
 			color: #b6b6b6;
 		}
@@ -39,6 +37,7 @@
 		}
 		browse- info- a {
 			color: rgba(0,0,0,0.5);
+			display: inline;
 		}
 
 		browse- title- {
