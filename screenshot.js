@@ -31,8 +31,8 @@ var browseItem = function (browse) {
       </a>
       <article>
         <title->${browse.title}</title->
-        <info->Shot by <a href="/${browse.browser}">${browse.name}</a> ${timeSince(browse.published)} ago</info->
-        <browser-count>${browse.browsers.length} Other Browsers</browser-count>
+        <info->Browsed by <a href="/${browse.browser}">${browse.name}</a> and ${browse.browsers.length} others</info->
+        <browser-count>${timeSince(browse.published)} ago</browser-count>
       </article>
     </browse->
   `;
