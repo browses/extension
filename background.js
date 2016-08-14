@@ -1,49 +1,119 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-'use strict';
+/*
+ * Open a new tab that prompts the user to allow browses
+ * access to the users facebook account information
+ */
 
-chrome.browserAction.onClicked.addListener(function() {
-  chrome.tabs.captureVisibleTab(function(screenshotUrl) {
-    chrome.tabs.query({active: true, currentWindow: true}, function(arrayOfTabs) {
-      chrome.identity.getProfileUserInfo(function (userInfo) {
+const facebookLogin = () => {
+  // Open a new tab with the auth dialog
+  chrome.tabs.create({
+    url: 'https://www.facebook.com/dialog/oauth' +
+    '?client_id=1659456037715738&response_type=token' +
+    '&redirect_uri=https://www.facebook.com/connect/login_success.html'
+  });
+}
 
-        var optimize = function(url, scale, quality){
-           var shot = new Image();
-           shot.src = url;
-           var cvs = document.createElement('canvas');
-           cvs.width = shot.naturalWidth*scale;
-           cvs.height = shot.naturalHeight*scale;
-           cvs.getContext('2d')
-              .drawImage(shot, 0, 0, shot.naturalWidth*scale, shot.naturalHeight*scale);
-           return cvs.toDataURL('image/jpeg', quality);
-        };
+/*
+ * When a tab is opened, check if it is the login redirect url,
+ * and extract the access token if so.
+ */
 
-        var browse = {
-          browser: 'joerobot',
-          title: arrayOfTabs[0].title,
-          shot: optimize(screenshotUrl, 0.5, 1),
-          url: arrayOfTabs[0].url
-        };
+const onFacebookLogin = () => {
+  const successURL = 'https://www.facebook.com/connect/login_success.html#access_token=';
+  chrome.tabs.query({}, tabs => {
+    const tab = tabs.find(x => x.url.indexOf(successURL) !== -1)
+    const params = tab.url.split('#')[1];
+    const accessToken = params.split('&')[0].split('=')[1];
+    // Store the new accessToken
+    localStorage.setItem('accessToken', accessToken);
+    // Close the login success tab
+    chrome.tabs.remove(tab.id);
+    // Upload any pending browses
+    uploadLatestBrowse();
+  });
+}
 
-        window.alert(JSON.stringify(browse));
+/*
+ * Once a browse has been uploaded then we want to show
+ * a list of the most recent browses in a new tab
+ */
 
-        var xhr = new XMLHttpRequest();
+const viewUserBrowses = shot => {
+  // Get the url for the users browses page
+  const usersPage = `index.html?browser=${ shot.browser }`;
+  var url = chrome.extension.getURL(usersPage);
+  // Open a new tab with the users browses page
+  chrome.tabs.create({ url });
+}
 
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
+/*
+ * If a good token has been found then format the latest browse
+ * data and POST it to the server for storage
+ */
 
-            window.alert(xhr.responseText);
-            var res = JSON.parse(xhr.responseText);
-            var viewTabUrl = chrome.extension.getURL('screenshot.html?browser=' + res.browser);
-            chrome.tabs.create({ url: viewTabUrl }, function() {});
-          }
-        };
+const uploadLatestBrowse = () => {
+  // Get the latest browse and extend with latest token
+  const data = JSON.parse(localStorage.getItem('browse'));
+  data.token = localStorage.getItem('accessToken');
+  // Post shot to the browses api
+  return fetch('https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(data => data.json())
+  .then(viewUserBrowses)
+  .then(() => localStorage.removeItem('browse'));
+}
 
-        xhr.open('POST', 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses', true);
-        xhr.send(JSON.stringify(browse));
-
-      });
-    });
+const takeScreenshot = () => new Promise((resolve, reject) => {
+  // Capture a base64 encoded image of active tab
+  chrome.tabs.captureVisibleTab((screenshot) => {
+    resolve(screenshot);
   });
 });
+
+const getActiveTab = () => new Promise((resolve, reject) => {
+  // Get the active tab object for title and url
+  chrome.tabs.query({active: true, currentWindow: true}, (tab) => {
+    resolve(tab[0]);
+  });
+});
+
+const storeBrowseLocally = data => {
+  // Put the browse data from last capture into storage
+  localStorage.setItem('browse', JSON.stringify({
+    shot: data[0],
+    url: data[1].url,
+    title: data[1].title,
+  }));
+}
+
+const checkAuthStatus = () => new Promise((resolve, reject) => {
+  // Get the token if one exists
+  const token = localStorage.getItem('accessToken');
+  if(!token) reject();
+  else {
+    // Check with facebook to see if token is valid
+    fetch(`https://graph.facebook.com/me?access_token=${ token }`)
+    .then(data => data.json())
+    .then(res => {
+      if (res.error) reject();
+      else resolve();
+    });
+  }
+});
+
+const captureBrowse = () => Promise.all([
+  takeScreenshot(),
+  getActiveTab()
+])
+.then(data => {
+  // Store the latest capture data
+  storeBrowseLocally(data);
+  // Prompt auth or upload browse
+  checkAuthStatus()
+  .then(uploadLatestBrowse)
+  .catch(facebookLogin);
+});
+
+chrome.tabs.onUpdated.addListener(onFacebookLogin);
+chrome.browserAction.onClicked.addListener(captureBrowse);
