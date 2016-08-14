@@ -1,20 +1,18 @@
 {
-  "name": "Test Screenshot Extension",
+  "name": "browses",
   "version": "1.3",
-  "description": "Demonstrate screenshot functionality in the chrome.tabs api.",
+  "description": "Plot your adventure through the web",
   "background": {
     "persistent": false,
     "scripts": ["background.js"]
   },
   "browser_action": {
-    "default_icon": "camera.png",
-    "default_title": "Take a screen shot!"
+    "default_icon": "icon.png",
+    "default_title": "browses"
   },
   "permissions": [
     "tabs",
     "activeTab",
-    "identity",
-    "identity.email",
     "https://ih41lln30j.execute-api.eu-west-1.amazonaws.com/*"
   ],
   "manifest_version": 2
