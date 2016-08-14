@@ -51,7 +51,7 @@ var browseItemComponent = function (browse) {
       </a>
       <article>
         <title->${browse.title}</title->
-        <info->Shot by <a href="/${browse.browser}">${browse.browser}</a> ${timeSince(browse.published)} ago</info->
+        <info->Shot by <a href="/${browse.nam}">${browse.name}</a> ${timeSince(browse.published)} ago</info->
         <browser-count>${browse.browsers.length} Other Browsers</browser-count>
       </article>
     </browse->
