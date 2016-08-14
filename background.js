@@ -3,7 +3,8 @@
  * access to the users facebook account information
  */
 
-function facebookLogin() {
+const facebookLogin = () => {
+  // Open a new tab with the auth dialog
   chrome.tabs.create({
     url: 'https://www.facebook.com/dialog/oauth' +
     '?client_id=1659456037715738&response_type=token' +
@@ -16,18 +17,18 @@ function facebookLogin() {
  * and extract the access token if so.
  */
 
-function onFacebookLogin(){
+const onFacebookLogin = () => {
   const successURL = 'https://www.facebook.com/connect/login_success.html#access_token=';
-  chrome.tabs.query({}, function(tabs) {
-    for (var i = 0; i < tabs.length; i++) {
-      if (tabs[i].url.indexOf(successURL) !== -1) {
-        var params = tabs[i].url.split('#')[1];
-        var accessToken = params.split('&')[0].split('=')[1];
-        localStorage.setItem('accessToken', accessToken);
-        chrome.tabs.remove(tabs[i].id);
-        uploadLatestBrowse();
-      }
-    }
+  chrome.tabs.query({}, tabs => {
+    const tab = tabs.find(x => x.url.indexOf(successURL) !== -1)
+    const params = tab.url.split('#')[1];
+    const accessToken = params.split('&')[0].split('=')[1];
+    // Store the new accessToken
+    localStorage.setItem('accessToken', accessToken);
+    // Close the login success tab
+    chrome.tabs.remove(tab.id);
+    // Upload any pending browses
+    uploadLatestBrowse();
   });
 }
 
@@ -40,9 +41,14 @@ const viewUserBrowses = shot => {
   // Get the url for the users browses page
   const usersPage = `screenshot.html?browser=${ shot.browser }`;
   var url = chrome.extension.getURL(usersPage);
-  // Open a new tab with the users browses
+  // Open a new tab with the users browses page
   chrome.tabs.create({ url });
 }
+
+/*
+ * If a good token has been found then format the latest browse
+ * data and POST it to the server for storage
+ */
 
 const uploadLatestBrowse = () => {
   // Get the latest browse and extend with latest token
@@ -55,7 +61,7 @@ const uploadLatestBrowse = () => {
   })
   .then(data => data.json())
   .then(viewUserBrowses)
-  .then(() => localStorage.setItem('browse',''));
+  .then(() => localStorage.removeItem('browse'));
 }
 
 const takeScreenshot = () => new Promise((resolve, reject) => {
@@ -72,7 +78,7 @@ const getActiveTab = () => new Promise((resolve, reject) => {
   });
 });
 
-const storeBrowse = data => {
+const storeBrowseLocally = data => {
   // Put the browse data from last capture into storage
   localStorage.setItem('browse', JSON.stringify({
     shot: data[0],
@@ -81,7 +87,7 @@ const storeBrowse = data => {
   }));
 }
 
-const checkAuth = () => new Promise((resolve, reject) => {
+const checkAuthStatus = () => new Promise((resolve, reject) => {
   // Get the token if one exists
   const token = localStorage.getItem('accessToken');
   if(!token) reject();
@@ -101,8 +107,10 @@ const captureBrowse = () => Promise.all([
   getActiveTab()
 ])
 .then(data => {
-  storeBrowse(data);
-  checkAuth()
+  // Store the latest capture data
+  storeBrowseLocally(data);
+  // Prompt auth or upload browse
+  checkAuthStatus()
   .then(uploadLatestBrowse)
   .catch(facebookLogin);
 });
