@@ -39,7 +39,7 @@ const onFacebookLogin = () => {
 
 const viewUserBrowses = shot => {
   // Get the url for the users browses page
-  const usersPage = `screenshot.html?browser=${ shot.browser }`;
+  const usersPage = `index.html?browser=${ shot.browser }`;
   var url = chrome.extension.getURL(usersPage);
   // Open a new tab with the users browses page
   chrome.tabs.create({ url });
