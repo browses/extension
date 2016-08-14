@@ -51,6 +51,9 @@ const viewUserBrowses = shot => {
  */
 
 const uploadLatestBrowse = () => {
+  // Set browser badge to indicate loading
+  chrome.browserAction.setBadgeBackgroundColor({color:[200, 0, 0, 255]});
+  chrome.browserAction.setBadgeText({text:' '});
   // Get the latest browse and extend with latest token
   const data = JSON.parse(localStorage.getItem('browse'));
   data.token = localStorage.getItem('accessToken');
@@ -61,7 +64,8 @@ const uploadLatestBrowse = () => {
   })
   .then(data => data.json())
   .then(viewUserBrowses)
-  .then(() => localStorage.removeItem('browse'));
+  .then(() => localStorage.removeItem('browse'))
+  .then(() => chrome.browserAction.setBadgeText({ text: '' }));
 }
 
 const takeScreenshot = () => new Promise((resolve, reject) => {
