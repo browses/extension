@@ -58,7 +58,7 @@ describe('browses', function() {
         const params = {
           token,
           url: service,
-          shot: image,
+          image,
           title: 'API Tests',
         };
         request(url)
@@ -72,18 +72,17 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
-          res.body.should.have.property('id');
           res.body.should.have.property('browser');
           res.body.should.have.property('name');
           res.body.should.have.property('url');
           res.body.should.have.property('title');
-          res.body.should.have.property('shot');
+          res.body.should.have.property('image');
           res.body.should.have.property('published');
-          browseID = res.body.id;
+          browseID = res.body.image.split(s3URL)[1];
           request(s3URL)
-          .get(`${browser}/${browseID}`)
-          .end((shotErr, shotRes) => {
-            shotRes.status.should.be.equal(200);
+          .get(browseID)
+          .end((imgErr, imgRes) => {
+            imgRes.status.should.be.equal(200);
             done();
           });
         });
@@ -106,16 +105,15 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Array);
-          res.body[0].should.have.property('id');
           res.body[0].should.have.property('browser');
           res.body[0].should.have.property('name');
-          res.body[0].should.have.property('shot');
+          res.body[0].should.have.property('image');
           res.body[0].should.have.property('url');
           res.body[0].should.have.property('published');
-          const ids = res.body.map((items) => items.id);
-          const browsers = res.body.map((items) => items.browser);
-          ids.should.containEql(browseID);
-          browsers.should.containEql(browser);
+          res.body[0].should.have.property('published_first_by');
+          res.body[0].should.have.property('published_first_time');
+          res.body[0].should.have.property('published_last_by');
+          res.body[0].should.have.property('published_last_time');
           done();
         });
       });
@@ -137,10 +135,9 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Array);
-          res.body[0].should.have.property('id');
           res.body[0].should.have.property('browser');
           res.body[0].should.have.property('name');
-          res.body[0].should.have.property('shot');
+          res.body[0].should.have.property('image');
           res.body[0].should.have.property('url');
           res.body[0].should.have.property('title');
           res.body[0].should.have.property('browsers');
@@ -148,8 +145,6 @@ describe('browses', function() {
           res.body[0].should.have.property('published_first_time');
           res.body[0].should.have.property('published_last_by');
           res.body[0].should.have.property('published_last_time');
-          const ids = res.body.map((items) => items.id);
-          ids.should.containEql(browseID);
           done();
         });
       });
@@ -167,7 +162,7 @@ describe('browses', function() {
           upvote: 'interesting',
         };
         request(url)
-        .post('/links/upvote')
+        .post('/browses/upvote')
         .send(params)
         .end((err, res) => {
           if (err) {
@@ -197,7 +192,7 @@ describe('browses', function() {
           url: service,
         };
         request(url)
-        .post('/links/view')
+        .post('/browses/view')
         .send(params)
         .end((err, res) => {
           if (err) {
@@ -241,8 +236,10 @@ describe('browses', function() {
     describe('testDeleteBrowse', function() {
       it('should return successfully with correct parameters', function(done) {
         const params = {
-          id: browses[0].id,
+          browser,
+          published: browses[0].published,
           token,
+          image: browses[0].image,
         };
         request(url)
         .delete('/browses')
@@ -255,15 +252,10 @@ describe('browses', function() {
           res.headers.should.have.property('access-control-allow-origin');
           res.headers['access-control-allow-origin'].should.be.equal('*');
           res.body.should.be.instanceof(Object);
-          res.body.should.have.property('id');
           res.body.should.have.property('browser');
+          res.body.should.have.property('published');
           res.body.should.have.property('name');
-          request(s3URL)
-          .get(`${browser}/${browseID}`)
-          .end((shotErr, shotRes) => {
-            shotRes.status.should.not.be.equal(200);
-            done();
-          });
+          done();
         });
       });
     });

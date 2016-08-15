@@ -1,7 +1,7 @@
 {
   "name": "browses",
-  "version": "1.0.0",
-  "description": "Social network of browsing interests",
+  "version": "1.1.0",
+  "description": "Plot your adventure through the web",
   "main": "index.js",
   "dependencies": {
     "eslint": "^2.11.0",

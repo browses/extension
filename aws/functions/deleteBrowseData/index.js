@@ -6,13 +6,6 @@
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
  * @resource: /browses
  * @method: DELETE
- * @params:
- *      - id: browse id [string]
- *      - token: access token from facebook [string]
- * @returns:
- *      - id: browse id [string]
- *      - browser: Facebook id [string]
- *      - name: Facebook name [string]
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -22,8 +15,16 @@ const request = require('request');
 
 
 exports.handle = function handler(event, context) {
-  if (!event.id) {
-    context.fail('Bad Request: Missing id parameter');
+  if (!event.browser) {
+    context.fail('Bad Request: Missing browser parameter');
+    return;
+  }
+  if (!event.published) {
+    context.fail('Bad Request: Missing published parameter');
+    return;
+  }
+  if (!event.image) {
+    context.fail('Bad Request: Missing image parameter');
     return;
   }
   if (!event.token) {
@@ -39,33 +40,33 @@ exports.handle = function handler(event, context) {
   }, (error, rsp, body) => {
     if (!error && rsp.statusCode === 200) {
       if (!body.hasOwnProperty('error')) {
-        // Successfully validated token
+        /*
+         * Successfully validated token
+         */
         const response = JSON.parse(body);
-        const browser = response.id;
+        if (response.id !== event.browser) {
+          context.fail('Unprocessable Entity: Browser didnt match the token');
+          return;
+        }
         const name = response.name;
         const browseParams = {
           TableName: 'browses',
           Key: {
-            id: event.id,
-          },
-          ConditionExpression: 'browser = :bsr',
-          ExpressionAttributeValues: {
-            ':bsr': browser,
+            browser: event.browser,
+            published: event.published,
           },
         };
         const s3Params = {
           Bucket: 'browses',
-          Key: `${browser}/${event.id}`,
+          Key: event.image.split('browses/')[1],
         };
         /*
          * Delete browse data from browses table.
          */
         dynamo.delete(browseParams, (browseErr) => {
           if (browseErr) {
-            if (browseErr.code === 'ConditionalCheckFailedException') {
-              context.fail('Unprocessable Entity: Browse belongs to a different user.');
-              return;
-            }
+            context.fail(browseErr);
+            return;
             context.fail('Internal Error: Failed to delete browse.');
             return;
           }
@@ -75,8 +76,9 @@ exports.handle = function handler(event, context) {
               return;
             }
             context.succeed({
-              id: event.id,
-              browser,
+              browser: event.browser,
+              published: event.published,
+              image: event.image,
               name,
             });
           });
