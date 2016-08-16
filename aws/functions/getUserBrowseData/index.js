@@ -6,21 +6,6 @@
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
  * @resource: /browses/{browser}
  * @method: GET
- * @returns:
- *      - Array:
- *        - id: browse id [string]
- *        - browser: Facebook user id [string]
- *        - name: Facebook name [string]
- *        - shot: link to screenshot in S3 [string]
- *        - url: link to browse [string]
- *        - published: time this browse was posted in ms [integer]
- *        - published_first_time: utc time published first in ms [integer]
- *        - published_last_time: utc time published last in ms [integer]
- *        - published_first_by: browser who first published [string]
- *        - published_last_by: browser who last published [string]
- *        - title: title of page [string]
- *        - browsers: array of browsers of this link [array][strings]
- * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -60,7 +45,7 @@ function convert(data, items) {
 exports.handle = function handler(event, context) {
   const params = {
     TableName: 'browses',
-    FilterExpression: 'browser = :bsr',
+    KeyConditionExpression: 'browser = :bsr',
     ExpressionAttributeValues: {
       ':bsr': event.browser,
     },
@@ -68,7 +53,7 @@ exports.handle = function handler(event, context) {
   /*
    * Query entries in browses table for browsers browses.
    */
-  dynamo.scan(params, (err, data) => {
+  dynamo.query(params, (err, data) => {
     if (err) {
       context.fail('Internal Error: Failed to query database.');
       return;

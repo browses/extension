@@ -14,11 +14,10 @@ To test the API run `npm test` from the aws directory.
 
 ```
 browses: {
-  id: e0256977-886c-4b30-bdf5-bcc7fdabcbef
 	browser: 10153134439438751
   name: Joe Todd
 	published: 1470946837213
-	shot: http://s3.amazonaws.com/browses/10153134439438751/e0256977-886c-4b30-bdf5-bcc7fdabcbef.jpg
+	image: http://s3.amazonaws.com/browses/10153134439438751/e0256977-886c-4b30-bdf5-bcc7fdabcbef
 	url: http://google.com
 }
 

@@ -1,9 +1,9 @@
 ---
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.1.0"
   title: Browses
-  description: A Social Network of Internet Browsing
+  description: Plot your adventure through the web
 host: execute-api.eu-west-1.amazonaws.com
 basePath: /
 schemes:
@@ -336,7 +336,7 @@ paths:
               type: string
             Access-Control-Allow-Origin:
               type: string
-  /links/upvote:
+  /browses/upvote:
     post:
       summary: Upvote Browse
       description: |
@@ -455,7 +455,7 @@ paths:
               type: string
             Access-Control-Allow-Origin:
               type: string
-  /links/view:
+  /browses/view:
     post:
       summary: View a Browse
       description: |
@@ -588,16 +588,13 @@ definitions:
         type: string
   LatestBrowseResponse:
     properties:
-      id:
-        type: string
-        description: browse id
       browser:
         type: string
         description: facebook id
       name:
         type: string
         description: facebook name
-      shot:
+      image:
         type: string
         description: link to browse screenshot in s3
       url:
@@ -605,7 +602,19 @@ definitions:
         description: link to browse
       published:
         type: integer
-        description: timestamp browse was published
+        description: timestamp of when browse was published (ms)
+      published_first_time:
+        type: integer
+        description: timestamp of when browse was first published (ms)
+      published_last_time:
+        type: integer
+        description: timestamp of when browse was last published (ms)
+      published_first_by:
+        type: string
+        description: browser who first published the browse
+      published_last_by:
+        type: string
+        description: browse who published the browse last
   LatestBrowseResponses:
     type: array
     items:
@@ -618,7 +627,7 @@ definitions:
       title:
         type: string
         description: title of browse webpage
-      shot:
+      image:
         type: string
         description: browse screenshot data as base64 encoded string
       token:
@@ -626,9 +635,6 @@ definitions:
         description: facebook access token
   UploadBrowseResponse:
     properties:
-      id:
-        type: string
-        description: browse id
       browser:
         type: string
         description: facebook id
@@ -641,7 +647,7 @@ definitions:
       title:
         type: string
         description: title of browse webpage
-      shot:
+      image:
         type: string
         description: link to screenshot saved in s3
       published:
@@ -649,20 +655,29 @@ definitions:
         description: timestamp of when browse data was published (ms)
   DeleteBrowse:
     properties:
-      id:
+      browser:
         type: string
-        description: browse id
+        description: facebook id
+      published:
+        type: integer
+        description: timestamp of when browse was published (ms)
+      image:
+        type: string
+        description: link to screenshot saved in s3
       token:
         type: string
         description: facebook access token
   DeleteBrowseResponse:
     properties:
-      id:
-        type: string
-        description: browse id
       browser:
         type: string
         description: facebook id
+      published:
+        type: integer
+        description: timestamp of when browse was published (ms)
+      image:
+        type: string
+        description: link to screenshot saved in s3
       name:
         type: string
         description: facebook name
@@ -672,16 +687,13 @@ definitions:
       $ref: "#/definitions/UserBrowseResponse"
   UserBrowseResponse:
     properties:
-      id:
-        type: string
-        description: browse id
       browser:
         type: string
         description: facebook id
       name:
         type: string
         description: facebook name
-      shot:
+      image:
         type: string
         description: link to screenshot saved in s3
       url:
@@ -689,13 +701,13 @@ definitions:
         description: link to browse
       published:
         type: integer
-        description: timestamp of when browse was published
+        description: timestamp of when browse was published (ms)
       published_first_time:
         type: integer
-        description: timestamp of when browse was first published
+        description: timestamp of when browse was first published (ms)
       published_last_time:
         type: integer
-        description: timestamp of when browse was last published
+        description: timestamp of when browse was last published (ms)
       published_first_by:
         type: string
         description: browser who first published the browse

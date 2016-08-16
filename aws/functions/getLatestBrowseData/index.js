@@ -1,20 +1,11 @@
 /*
  * getLatestBrowseData
  *
- * Get all browses from the last 24 hours.
+ * Get most recent browses.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
  * @resource: /browses
  * @method: GET
- * @returns:
- *      - Array:
- *        - id: browse id [string]
- *        - browser: Facebook id [string]
- *        - name: Facebook name [string]
- *        - shot: link to screenshot in S3 [string]
- *        - url: link to browse [string]
- *        - published: utc time published in ms [integer]
- * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -51,17 +42,12 @@ function convert(data, items) {
 }
 
 exports.handle = function handler(event, context) {
-  const lastDay = new Date().getTime() - (24 * 60 * 60 * 1000);
   const params = {
     TableName: 'browses',
-    FilterExpression: 'published > :lday',
-    ExpressionAttributeValues: {
-      ':lday': lastDay,
-    },
+    Limit: 100,
   };
-
   /*
-   * Scan browses table for last 24 hours worth of data.
+   * Scan browses table for most recent 100 browses.
    */
   dynamo.scan(params, (err, data) => {
     if (err) {
@@ -84,8 +70,7 @@ exports.handle = function handler(event, context) {
           },
         };
         /*
-         * Get interests for the last 24 hours worth of data
-         * from the links table.
+         * Get interests for most recent data from the links table.
          */
         dynamo.batchGet(batchParams, (batchErr, batchData) => {
           if (batchErr) {

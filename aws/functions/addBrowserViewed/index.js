@@ -8,16 +8,8 @@
  * with the authenticated browser.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
- * @resource: /links/view
+ * @resource: /browses/view
  * @method: POST
- * @params:
- *      - url: browse URL [string]
- *      - token: access token from facebook [string]
- * @returns:
- *      - browser: Facebook ID [string]
- *      - name: Facebook name [string]
- *      - url [string]
- * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -43,7 +35,9 @@ exports.handle = function handler(event, context) {
   }, (error, rsp, body) => {
     if (!error && rsp.statusCode === 200) {
       if (!body.hasOwnProperty('error')) {
-        // Successfully validated token
+        /*
+         * Successfully validated token
+         */
         const browser = JSON.parse(body).id;
         const name = JSON.parse(body).name;
         const linkParams = {

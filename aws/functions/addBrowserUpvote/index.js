@@ -8,18 +8,8 @@
  * the user to the corresponding list associated with this URL.
  *
  * @url: https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta
- * @resource: /links/upvote
+ * @resource: /browses/upvote
  * @method: POST
- * @params:
- *      - url: browse URL [string]
- *      - upvote: either useful, interesting or entertaining [string]
- *      - token: access token from facebook [string]
- * @returns:
- *      - browser: Facebook ID [string]
- *      - name: Facebook name [string]
- *      - url [string]
- *      - upvote [string]
- * @test: npm test
  */
 const aws = require('aws-sdk');
 aws.config.region = 'eu-west-1';
@@ -56,7 +46,9 @@ exports.handle = function handler(event, context) {
   }, (error, rsp, body) => {
     if (!error && rsp.statusCode === 200) {
       if (!body.hasOwnProperty('error')) {
-        // Successfully validated token
+        /*
+         * Successfully validated token
+         */
         const browser = JSON.parse(body).id;
         const name = JSON.parse(body).name;
         const linkParams = {
