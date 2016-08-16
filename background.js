@@ -21,14 +21,16 @@ const onFacebookLogin = () => {
   const successURL = 'https://www.facebook.com/connect/login_success.html#access_token=';
   chrome.tabs.query({}, tabs => {
     const tab = tabs.find(x => x.url.indexOf(successURL) !== -1)
-    const params = tab.url.split('#')[1];
-    const accessToken = params.split('&')[0].split('=')[1];
-    // Store the new accessToken
-    localStorage.setItem('accessToken', accessToken);
-    // Close the login success tab
-    chrome.tabs.remove(tab.id);
-    // Upload any pending browses
-    uploadLatestBrowse();
+    if (tab !== undefined) {
+      const params = tab.url.split('#')[1];
+      const accessToken = params.split('&')[0].split('=')[1];
+      // Store the new accessToken
+      localStorage.setItem('accessToken', accessToken);
+      // Close the login success tab
+      chrome.tabs.remove(tab.id);
+      // Upload any pending browses
+      uploadLatestBrowse();
+    }
   });
 }
 
@@ -83,7 +85,7 @@ const getActiveTab = () => new Promise((resolve, reject) => {
 const storeBrowseLocally = data => {
   // Put the browse data from last capture into storage
   localStorage.setItem('browse', JSON.stringify({
-    shot: data[0],
+    image: data[0],
     url: data[1].url,
     title: data[1].title,
   }));
