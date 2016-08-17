@@ -20,8 +20,8 @@ const facebookLogin = () => {
 const onFacebookLogin = () => {
   const successURL = 'https://www.facebook.com/connect/login_success.html#access_token=';
   chrome.tabs.query({}, tabs => {
-    const tab = tabs.find(x => x.url.indexOf(successURL) !== -1)
-    if (tab !== undefined) {
+    const successTab = tabs.find(x => x.url.indexOf(successURL) !== -1)
+    if (successTab !== undefined) {
       const params = tab.url.split('#')[1];
       const accessToken = params.split('&')[0].split('=')[1];
       // Store the new accessToken
