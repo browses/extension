@@ -65,8 +65,6 @@ exports.handle = function handler(event, context) {
          */
         dynamo.delete(browseParams, (browseErr) => {
           if (browseErr) {
-            context.fail(browseErr);
-            return;
             context.fail('Internal Error: Failed to delete browse.');
             return;
           }

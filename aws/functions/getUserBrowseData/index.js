@@ -49,6 +49,7 @@ exports.handle = function handler(event, context) {
     ExpressionAttributeValues: {
       ':bsr': event.browser,
     },
+    ScanIndexForward: false,
   };
   /*
    * Query entries in browses table for browsers browses.
