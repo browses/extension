@@ -67,7 +67,7 @@ const compressImage = url => {
 
 const uploadLatestBrowse = () => {
   // Set browser badge to indicate loading
-  chrome.browserAction.setBadgeBackgroundColor({color:[200, 0, 0, 255]});
+  chrome.browserAction.setBadgeBackgroundColor({color:[210, 0, 60, 255]});
   chrome.browserAction.setBadgeText({text:' '});
   // Get the latest browse and extend with latest token
   const data = JSON.parse(localStorage.getItem('browse'));
