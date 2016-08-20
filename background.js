@@ -39,9 +39,9 @@ const onFacebookLogin = () => {
  * a list of the most recent browses in a new tab
  */
 
-const viewUserBrowses = shot => {
+const viewUserBrowses = ({browser}) => {
   // Redirect to the url for the users browses page
-  const url = `http://browses.io/${ shot.browser }`;
+  const url = `http://browses.io/${browser}`;
   chrome.tabs.create({ url });
 }
 
