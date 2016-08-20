@@ -46,6 +46,21 @@ const viewUserBrowses = shot => {
 }
 
 /*
+ * Before uploading an image we crudly compress it using
+ * a canvas element toDataURL quality option
+ */
+
+const compressImage = url => {
+  const cvs = document.createElement('canvas');
+  const img = new Image();
+  img.src = url;
+  cvs.width = img.naturalWidth;
+  cvs.height = img.naturalHeight;
+  cvs.getContext("2d").drawImage(img, 0, 0);
+  return cvs.toDataURL('image/jpeg', 0.618);
+}
+
+/*
  * If a good token has been found then format the latest browse
  * data and POST it to the server for storage
  */
@@ -71,7 +86,7 @@ const uploadLatestBrowse = () => {
 const takeScreenshot = () => new Promise((resolve, reject) => {
   // Capture a base64 encoded image of active tab
   chrome.tabs.captureVisibleTab((screenshot) => {
-    resolve(screenshot);
+    resolve(compressImage(screenshot));
   });
 });
 
