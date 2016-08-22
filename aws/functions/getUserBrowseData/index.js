@@ -47,12 +47,24 @@ function convert(data, items) {
 exports.handle = function handler(event, context) {
   const params = {
     TableName: 'browses',
-    ScanIndexForward: false,
-    KeyConditionExpression: 'browser = :bsr',
+    KeyConditionExpression: 'browser = :bsr AND published > :ts',
     ExpressionAttributeValues: {
       ':bsr': event.browser,
+      ':ts': 0,
     },
+    ScanIndexForward: false,
+    Limit: 25,
   };
+  /*
+   * If a page is specified then add to the limit, to get more
+   * results then return the relevent ones.
+   */
+  const page = event.page ? (parseInt(event.page, 10) - 1) * 25 : 0;
+  if (isNaN(page)) {
+    context.fail('Bad Request: Failed to convert page to integer.');
+    return;
+  }
+  params.Limit += page;
   /*
    * Query entries in browses table for browsers browses.
    */
@@ -61,8 +73,8 @@ exports.handle = function handler(event, context) {
       context.fail('Internal Error: Failed to query database.');
       return;
     }
-    if (data.Count > 0) {
-      const browses = data.Items;
+    if (data.Count > page) {
+      const browses = data.Items.slice(page);
       const links = uniq(browses.map(item => item.url));
       const linkObjs = links.map(item => {
         const obj = { url: item };

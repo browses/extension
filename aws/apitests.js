@@ -97,6 +97,7 @@ describe('browses', function() {
       it('should return successfully with correct parameters', function(done) {
         request(url)
         .get('/browses')
+        .query({ page: 1 })
         .end((err, res) => {
           if (err) {
             throw err;
@@ -127,6 +128,7 @@ describe('browses', function() {
       it('should return successfully with correct parameters', function(done) {
         request(url)
         .get(`/browses/${browser}`)
+        .query({ page: 1 })
         .end((err, res) => {
           if (err) {
             throw err;
