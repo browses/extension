@@ -18,6 +18,11 @@ paths:
         Get latest browses from the last 24 hours
       produces:
         - application/json
+      parameters:
+        - name: page
+          in: query
+          description: Page of data
+          type: integer
       tags:
         - Resources
       x-amazon-apigateway-auth:
@@ -26,6 +31,11 @@ paths:
         type: aws
         uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_getLatestBrowseData/invocations
         httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "page": "$input.params('page')"
+            }
         responses:
           "default":
             statusCode: "200"
@@ -262,6 +272,10 @@ paths:
           description: Browser username
           required: true
           type: string
+        - name: page
+          in: query
+          description: Page of data
+          type: integer
       x-amazon-apigateway-auth:
         type: none
       x-amazon-apigateway-integration:
@@ -271,7 +285,8 @@ paths:
         requestTemplates:
           application/json: |
             {
-              "browser" : "$input.params('browser')"
+              "browser" : "$input.params('browser')",
+              "page": "$input.params('page')"
             }
         responses:
           "default":
