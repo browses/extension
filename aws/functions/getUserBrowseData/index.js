@@ -23,7 +23,9 @@ function uniq(a) {
  */
 function merge(browses, links) {
   return browses.map((browse) => {
+    const data = browse;
     const link = links.filter((l) => l.url === browse.url);
+    if (data.hasOwnProperty('active')) { delete data.active; }
     return Object.assign(browse, link[0]);
   });
 }
@@ -45,11 +47,11 @@ function convert(data, items) {
 exports.handle = function handler(event, context) {
   const params = {
     TableName: 'browses',
+    ScanIndexForward: false,
     KeyConditionExpression: 'browser = :bsr',
     ExpressionAttributeValues: {
       ':bsr': event.browser,
     },
-    ScanIndexForward: false,
   };
   /*
    * Query entries in browses table for browsers browses.

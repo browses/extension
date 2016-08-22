@@ -23,8 +23,10 @@ function uniq(a) {
  */
 function merge(browses, links) {
   return browses.map((browse) => {
+    const data = browse;
     const link = links.filter((l) => l.url === browse.url);
-    return Object.assign(browse, link[0]);
+    if (data.hasOwnProperty('active')) { delete data.active; }
+    return Object.assign(data, link[0]);
   });
 }
 
@@ -44,14 +46,21 @@ function convert(data, items) {
 exports.handle = function handler(event, context) {
   const params = {
     TableName: 'browses',
-    Limit: 100,
+    IndexName: 'publishedIndex',
+    KeyConditionExpression: 'active = :ok AND published > :ts',
+    ExpressionAttributeValues: {
+      ':ok': 'true',
+      ':ts': 0,
+    },
+    ScanIndexForward: false,
+    Limit: 25,
   };
   /*
    * Scan browses table for most recent 100 browses.
    */
-  dynamo.scan(params, (err, data) => {
+  dynamo.query(params, (err, data) => {
     if (err) {
-      context.fail('Internal Error: Failed to scan browses');
+      context.fail('Internal Error: Failed to query browses');
       return;
     }
     if (data.Count > 0) {

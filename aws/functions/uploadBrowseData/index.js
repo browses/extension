@@ -81,6 +81,7 @@ exports.handle = function handler(event, context) {
               name,
               url: event.url,
               image: `https://s3-eu-west-1.amazonaws.com/browses/${browser}/${guid}`,
+              active: 'true',
             },
           };
           /*
