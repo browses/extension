@@ -41,6 +41,10 @@ paths:
             statusCode: "200"
             responseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
           "Internal Error: .*":
             statusCode: "500"
             responseParameters:
@@ -53,6 +57,13 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/LatestBrowseResponses"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
         500:
           description: Internal Error
           headers:
@@ -293,6 +304,10 @@ paths:
             statusCode: "200"
             responseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
           "Internal Error: .*":
             statusCode: "500"
             responseParameters:
@@ -305,6 +320,13 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/UserBrowseResponses"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
         500:
           description: Internal Error
           headers:
