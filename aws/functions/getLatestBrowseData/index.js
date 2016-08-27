@@ -53,13 +53,13 @@ exports.handle = function handler(event, context) {
       ':ts': 0,
     },
     ScanIndexForward: false,
-    Limit: 25,
+    Limit: 10,
   };
   /*
    * If a page is specified then add to the limit, to get more
    * results then return the relevent ones.
    */
-  const page = event.page ? (parseInt(event.page, 10) - 1) * 25 : 0;
+  const page = event.page ? (parseInt(event.page, 10) - 1) * 10 : 0;
   if (isNaN(page)) {
     context.fail('Bad Request: Failed to convert page to integer.');
     return;
