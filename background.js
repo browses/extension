@@ -51,13 +51,18 @@ const viewUserBrowses = ({browser}) => {
  */
 
 const compressImage = url => {
-  const cvs = document.createElement('canvas');
-  const img = new Image();
-  img.src = url;
-  cvs.width = img.naturalWidth;
-  cvs.height = img.naturalHeight;
-  cvs.getContext("2d").drawImage(img, 0, 0);
-  return cvs.toDataURL('image/jpeg', 0.618);
+  const size = url.length;
+  if (size > 100000) {
+    const rate = (-0.0000005 * size) + 0.9;
+    console.log(rate);
+    const cvs = document.createElement('canvas');
+    const img = new Image();
+    img.src = url;
+    cvs.width = img.naturalWidth;
+    cvs.height = img.naturalHeight;
+    cvs.getContext("2d").drawImage(img, 0, 0);
+    return cvs.toDataURL('image/jpeg', rate);
+  } return url;
 }
 
 /*
