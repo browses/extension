@@ -1,7 +1,7 @@
 {
   "name": "Browses",
-  "version": "1.3",
-  "description": "Plot your adventure through the web",
+  "version": "1.3.1",
+  "description": "Your evidential webventure.",
   "background": {
     "persistent": false,
     "scripts": ["background.js"]
@@ -11,7 +11,8 @@
     "default_title": "Browse"
   },
   "icons": {
-    "48": "icon-48.png"
+    "48": "icon-48.png",
+    "128": "icon-128.png"
   },
   "permissions": [
     "tabs",
