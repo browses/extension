@@ -84,6 +84,9 @@ exports.handle = function handler(event, context) {
               active: 'true',
             },
           };
+          if (event.thumb) {
+            browseParams.Item.thumb = event.thumb;
+          }
           /*
            * Store browse data in browses table in DynamoDB.
            */
