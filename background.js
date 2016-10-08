@@ -54,7 +54,6 @@ const compressImage = url => {
   const size = url.length;
   if (size > 100000) {
     const rate = (-0.0000005 * size) + 0.9;
-    console.log(rate);
     const cvs = document.createElement('canvas');
     const img = new Image();
     img.src = url;
