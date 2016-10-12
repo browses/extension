@@ -9,7 +9,7 @@ const request = require('supertest');
 
 
 describe('browses', function() {
-  const url = 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta';
+  const url = 'https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/v1';
   const s3URL = 'https://s3-eu-west-1.amazonaws.com/browses/';
   const appId = '1659456037715738';
   const secret = '7f02b4a9d73f9ca20603ace52f421158';
@@ -207,6 +207,38 @@ describe('browses', function() {
           res.body.should.have.property('browser');
           res.body.should.have.property('name');
           res.body.should.have.property('url');
+          done();
+        });
+      });
+    });
+  });
+  /*
+   * Test the most viewed browses
+   */
+  describe('mostViewedBrowses', function() {
+    describe('testMostViewedBrowses', function() {
+      it('should return successfully with correct parameters', function(done) {
+        request(url)
+        .get('/browses/popular')
+        .end((err, res) => {
+          if (err) {
+            throw err;
+          }
+          res.status.should.be.equal(200);
+          res.headers.should.have.property('access-control-allow-origin');
+          res.headers['access-control-allow-origin'].should.be.equal('*');
+          res.body.should.be.instanceof(Array);
+          res.body[0].should.have.property('browser');
+          res.body[0].should.have.property('name');
+          res.body[0].should.have.property('image');
+          res.body[0].should.have.property('url');
+          res.body[0].should.have.property('title');
+          res.body[0].should.have.property('browsers');
+          res.body[0].should.have.property('published_first_by');
+          res.body[0].should.have.property('published_first_time');
+          res.body[0].should.have.property('published_last_by');
+          res.body[0].should.have.property('published_last_time');
+          res.body[0].should.have.property('viewed');
           done();
         });
       });
