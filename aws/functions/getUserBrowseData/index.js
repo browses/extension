@@ -26,6 +26,7 @@ function merge(browses, links) {
     const data = browse;
     const link = links.filter((l) => l.url === browse.url);
     if (data.hasOwnProperty('active')) { delete data.active; }
+    if (link[0].hasOwnProperty('active')) { delete link[0].active; }
     return Object.assign(browse, link[0]);
   });
 }

@@ -1,0 +1,10 @@
+{
+  "name": "get_latest_browse_data",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd ../../ && apex invoke getLatestBrowseData && cd functions/getLatestBrowseData",
+    "deploy": "cd ../../ && apex deploy && cd functions/getLatestBrowseData"
+  }
+}
