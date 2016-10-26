@@ -2,7 +2,6 @@
  * Open a new tab that prompts the user to allow browses
  * access to the users facebook account information
  */
-
 const facebookLogin = () => {
   // Open a new tab with the auth dialog
   chrome.tabs.create({
@@ -17,7 +16,6 @@ const facebookLogin = () => {
  * When a tab is opened, check if it is the login redirect url,
  * and extract the access token if so.
  */
-
 const onFacebookLogin = () => {
   const successURL = 'https://www.facebook.com/connect/login_success.html#access_token=';
   chrome.tabs.query({}, tabs => {
@@ -29,6 +27,21 @@ const onFacebookLogin = () => {
       localStorage.setItem('accessToken', accessToken);
       // Close the login success tab
       chrome.tabs.remove(successTab.id);
+
+      const unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
+        unsubscribe();
+        // Build Firebase credential with the Facebook auth token.
+        const credential = firebase.auth.FacebookAuthProvider.credential(accessToken);
+        // Sign in with the credential from the Facebook user.
+        firebase.auth().signInWithCredential(credential)
+        .then((firebaseUser) => {
+          localStorage.setItem('id', firebaseUser.providerData[0].uid);
+          localStorage.setItem('name', firebaseUser.displayName);
+        }).catch((error) => {
+          console.log(error);
+        });
+      });
+
       // Upload any pending browses
       uploadLatestBrowse();
     }
@@ -39,7 +52,6 @@ const onFacebookLogin = () => {
  * Once a browse has been uploaded then we want to show
  * a list of the most recent browses in a new tab
  */
-
 const viewUserBrowses = ({browser}) => {
   // Redirect to the url for the users browses page
   const url = `http://browses.io/${browser}`;
@@ -50,12 +62,10 @@ const viewUserBrowses = ({browser}) => {
  * Before uploading an image we crudly compress it using
  * a canvas element toDataURL quality option
  */
-
 const compressImage = url => {
   const size = url.length;
   if (size > 100000) {
     const rate = (-0.0000005 * size) + 0.9;
-    console.log(rate);
     const cvs = document.createElement('canvas');
     const img = new Image();
     img.src = url;
@@ -70,23 +80,21 @@ const compressImage = url => {
  * If a good token has been found then format the latest browse
  * data and POST it to the server for storage
  */
-
 const uploadLatestBrowse = () => {
   // Set browser badge to indicate loading
-  chrome.browserAction.setBadgeBackgroundColor({color:[210, 0, 60, 255]});
-  chrome.browserAction.setBadgeText({text:' '});
+  chrome.browserAction.setBadgeBackgroundColor({ color: [210, 0, 60, 255] });
+  chrome.browserAction.setBadgeText({ text: ' ' });
   // Get the latest browse and extend with latest token
   const data = JSON.parse(localStorage.getItem('browse'));
-  data.token = localStorage.getItem('accessToken');
-  // Post shot to the browses api
-  return fetch('https://f7mlijh134.execute-api.eu-west-1.amazonaws.com/beta/browses', {
-    method: 'POST',
-    body: JSON.stringify(data)
+  // data.token = localStorage.getItem('accessToken');
+  // Post shot to the firebase
+  uploadImage(data.image)
+  .then(() => {
+    writeBrowseData(data.image, data.url, data.title)
+    .then(viewUserBrowses)
+    .then(() => localStorage.removeItem('browse'))
+    .then(() => chrome.browserAction.setBadgeText({ text: '' }));
   })
-  .then(data => data.json())
-  .then(viewUserBrowses)
-  .then(() => localStorage.removeItem('browse'))
-  .then(() => chrome.browserAction.setBadgeText({ text: '' }));
 }
 
 const takeScreenshot = () => new Promise((resolve, reject) => {
@@ -117,13 +125,15 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
   const token = localStorage.getItem('accessToken');
   if(!token) reject();
   else {
-    // Check with facebook to see if token is valid
-    fetch(`https://graph.facebook.com/me?access_token=${ token }`)
-    .then(data => data.json())
-    .then(res => {
-      if (res.error) reject();
-      else resolve();
-    });
+    // Sign in with the credential to see if token is valid
+    const credential = firebase.auth.FacebookAuthProvider.credential(token);
+    firebase.auth().signInWithCredential(credential)
+    .then((firebaseUser) => {
+      localStorage.setItem('id', firebaseUser.providerData[0].uid);
+      localStorage.setItem('name', firebaseUser.displayName);
+      resolve(firebaseUser);
+    })
+    .catch((error) => reject());
   }
 });
 
@@ -139,6 +149,52 @@ const captureBrowse = () => Promise.all([
   .then(uploadLatestBrowse)
   .catch(facebookLogin);
 });
+
+// Return random guid string
+const getGUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+// Initialise Firebase
+const config = {
+  apiKey: "AIzaSyDf0B5peKIIXbamijhyJjqtJtv6LsYiQIQ",
+  authDomain: "browses-ef3f0.firebaseapp.com",
+  databaseURL: "https://browses-ef3f0.firebaseio.com",
+  storageBucket: "browses-ef3f0.appspot.com",
+  messagingSenderId: "685716734453"
+};
+firebase.initializeApp(config);
+
+// Initialise Facebook
+const provider = new firebase.auth.FacebookAuthProvider();
+provider.addScope('user_friends');
+
+// Initialise database/storage
+const database = firebase.database();
+const storage = firebase.storage().ref();
+
+// Promise to upload browse to database.
+const writeBrowseData = (image, url, title) => {
+  return firebase.database().ref('browses').set({
+    id: localStorage.getItem('id'),
+    name: localStorage.getItem('name'),
+    url, title,
+  })
+};
+
+// Promise to upload image to storage.
+const uploadImage = (image) => {
+  const id = localStorage.getItem('id');
+  const guid = getGUID();
+  const imageRef = storage.child(`${id}/${guid}.jpg`);
+  return imageRef.putString(image).then(function(snapshot) {
+    console.log(snapshot);
+  });
+};
 
 chrome.tabs.onUpdated.addListener(onFacebookLogin);
 chrome.browserAction.onClicked.addListener(captureBrowse);
