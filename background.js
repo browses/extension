@@ -82,7 +82,10 @@ const uploadLatestBrowse = () => {
   const published = getTimestamp();
   // Post shot to the firebase
   uploadImage(data.image)
-  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, published))
+  .then((snapshot) => {
+    console.log(snapshot);
+    writeBrowseData(snapshot.ref.name, data.url, published, snapshot.downloadURL)
+  })
   //.then(writeLinkData(encodeURL(data.url), data.title, published))
   //.then(viewUserBrowses)
   .then(() => localStorage.removeItem('browse'))
@@ -186,11 +189,11 @@ const storage = firebase.storage().ref();
 /*
  * Promise to upload browse to database.
  */
-const writeBrowseData = (image, url, published) => {
-  const id = localStorage.getItem('id');
+const writeBrowseData = (file, url, published, image) => {
+  const uid = localStorage.getItem('id');
   const name = localStorage.getItem('name');
-  return database.ref(`browses/${id}/${image}`).set({
-    name, url, published,
+  return database.ref(`browses/${uid}/${file}`).set({
+    uid, name, url, published, image
   });
 };
 
