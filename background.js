@@ -86,8 +86,6 @@ const uploadLatestBrowse = () => {
     console.log(snapshot);
     writeBrowseData(snapshot.ref.name, data.url, published, snapshot.downloadURL)
   })
-  //.then(writeLinkData(encodeURL(data.url), data.title, published))
-  //.then(viewUserBrowses)
   .then(() => localStorage.removeItem('browse'))
   .then(() => chrome.browserAction.setBadgeText({ text: '' }));
 };
@@ -194,27 +192,6 @@ const writeBrowseData = (file, url, published, image) => {
   const name = localStorage.getItem('name');
   return database.ref(`browses/${uid}/${file}`).set({
     uid, name, url, published, image
-  });
-};
-
-/*
- * Promise to upload/update link data.
- */
-const writeLinkData = (url, title, published) => {
-  return new Promise((resolve, reject) => {
-    database.ref(`links`).once('value', (snapshot) => {
-      if (snapshot.hasChild(`${url}`)) {
-        // Update browser array, last published time, by
-        console.log(snapshot);
-      } else {
-        // Entry doesn't exist yet so create.
-        const id = localStorage.getItem('id');
-        database.ref(`links/${url}`).set({
-          url, title, browsers: [id],
-          first_published_by: id, first_published: published,
-        }).then(resolve).catch(reject);
-      }
-    });
   });
 };
 
