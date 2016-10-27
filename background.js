@@ -27,21 +27,15 @@ const onFacebookLogin = () => {
       localStorage.setItem('accessToken', accessToken);
       // Close the login success tab
       chrome.tabs.remove(successTab.id);
-
+      // Build Firebase credential with the Facebook auth token.
       const credential = firebase.auth.FacebookAuthProvider.credential(accessToken);
       // Sign in with the credential from the Facebook user.
       firebase.auth().signInWithCredential(credential)
       .then((firebaseUser) => {
         localStorage.setItem('id', firebaseUser.providerData[0].uid);
         localStorage.setItem('name', firebaseUser.displayName);
-        // Upload any pending browses.
-        if (localStorage.getItem('browses')) {
-          uploadLatestBrowse();
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        uploadLatestBrowse();
+      }).catch(console.log);
     }
   });
 };
@@ -133,8 +127,7 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
       localStorage.setItem('id', firebaseUser.providerData[0].uid);
       localStorage.setItem('name', firebaseUser.displayName);
       resolve(firebaseUser);
-    })
-    .catch((error) => reject());
+    }).catch(reject);
   }
 });
 
