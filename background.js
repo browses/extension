@@ -83,7 +83,7 @@ const uploadLatestBrowse = () => {
   // Post shot to the firebase
   uploadImage(data.image)
   .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, published))
-  .then(writeLinkData(encodeURL(data.url), data.title, published))
+  //.then(writeLinkData(encodeURL(data.url), data.title, published))
   //.then(viewUserBrowses)
   .then(() => localStorage.removeItem('browse'))
   .then(() => chrome.browserAction.setBadgeText({ text: '' }));
