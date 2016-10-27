@@ -10,7 +10,7 @@ const facebookLogin = () => {
     '&redirect_uri=https://www.facebook.com/connect/login_success.html' +
     '&scope=user_friends'
   });
-}
+};
 
 /*
  * When a tab is opened, check if it is the login redirect url,
@@ -28,35 +28,34 @@ const onFacebookLogin = () => {
       // Close the login success tab
       chrome.tabs.remove(successTab.id);
 
-      const unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
-        unsubscribe();
-        // Build Firebase credential with the Facebook auth token.
-        const credential = firebase.auth.FacebookAuthProvider.credential(accessToken);
-        // Sign in with the credential from the Facebook user.
-        firebase.auth().signInWithCredential(credential)
-        .then((firebaseUser) => {
-          localStorage.setItem('id', firebaseUser.providerData[0].uid);
-          localStorage.setItem('name', firebaseUser.displayName);
-        }).catch((error) => {
-          console.log(error);
-        });
+      const credential = firebase.auth.FacebookAuthProvider.credential(accessToken);
+      // Sign in with the credential from the Facebook user.
+      firebase.auth().signInWithCredential(credential)
+      .then((firebaseUser) => {
+        localStorage.setItem('id', firebaseUser.providerData[0].uid);
+        localStorage.setItem('name', firebaseUser.displayName);
+        // Upload any pending browses.
+        if (localStorage.getItem('browses')) {
+          uploadLatestBrowse();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
       });
-
-      // Upload any pending browses
-      uploadLatestBrowse();
     }
   });
-}
+};
 
 /*
  * Once a browse has been uploaded then we want to show
  * a list of the most recent browses in a new tab
  */
-const viewUserBrowses = ({browser}) => {
+const viewUserBrowses = () => {
   // Redirect to the url for the users browses page
+  const browser = localStorage.getItem('id') || '';
   const url = `http://browses.io/${browser}`;
   chrome.tabs.create({ url });
-}
+};
 
 /*
  * Before uploading an image we crudly compress it using
@@ -74,7 +73,7 @@ const compressImage = url => {
     cvs.getContext("2d").drawImage(img, 0, 0);
     return cvs.toDataURL('image/jpeg', rate);
   } return url;
-}
+};
 
 /*
  * If a good token has been found then format the latest browse
@@ -86,16 +85,15 @@ const uploadLatestBrowse = () => {
   chrome.browserAction.setBadgeText({ text: ' ' });
   // Get the latest browse and extend with latest token
   const data = JSON.parse(localStorage.getItem('browse'));
-  // data.token = localStorage.getItem('accessToken');
+  const published = getTimestamp();
   // Post shot to the firebase
   uploadImage(data.image)
-  .then(() => {
-    writeBrowseData(data.image, data.url, data.title)
-    .then(viewUserBrowses)
-    .then(() => localStorage.removeItem('browse'))
-    .then(() => chrome.browserAction.setBadgeText({ text: '' }));
-  })
-}
+  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, published))
+  .then(writeLinkData(encodeURL(data.url), data.title, published))
+  //.then(viewUserBrowses)
+  .then(() => localStorage.removeItem('browse'))
+  .then(() => chrome.browserAction.setBadgeText({ text: '' }));
+};
 
 const takeScreenshot = () => new Promise((resolve, reject) => {
   // Capture a base64 encoded image of active tab
@@ -118,8 +116,11 @@ const storeBrowseLocally = data => {
     url: data[1].url,
     title: data[1].title,
   }));
-}
+};
 
+/*
+ * Check if we are still authenticated.
+ */
 const checkAuthStatus = () => new Promise((resolve, reject) => {
   // Get the token if one exists
   const token = localStorage.getItem('accessToken');
@@ -137,6 +138,9 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
   }
 });
 
+/*
+ * Capture browse and upload.
+ */
 const captureBrowse = () => Promise.all([
   takeScreenshot(),
   getActiveTab()
@@ -150,7 +154,9 @@ const captureBrowse = () => Promise.all([
   .catch(facebookLogin);
 });
 
-// Return random guid string
+/*
+ * Return random guid string
+ */
 const getGUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
@@ -159,7 +165,19 @@ const getGUID = () => {
   });
 };
 
-// Initialise Firebase
+/*
+ * Forward slashes, dots, hashes etc result in the creation
+ * of a new level in Firebase database. So we need to encode them.
+ */
+const encodeURL = (url) => {
+  return encodeURIComponent(url).replace(/\./g, '%2E');
+};
+
+const getTimestamp = () => parseInt(new Date().getTime() / 1000, 10);
+
+/*
+ * Initialise Firebase
+ */
 const config = {
   apiKey: "AIzaSyDf0B5peKIIXbamijhyJjqtJtv6LsYiQIQ",
   authDomain: "browses-ef3f0.firebaseapp.com",
@@ -169,31 +187,48 @@ const config = {
 };
 firebase.initializeApp(config);
 
-// Initialise Facebook
-const provider = new firebase.auth.FacebookAuthProvider();
-provider.addScope('user_friends');
-
-// Initialise database/storage
 const database = firebase.database();
 const storage = firebase.storage().ref();
 
-// Promise to upload browse to database.
-const writeBrowseData = (image, url, title) => {
-  return firebase.database().ref('browses').set({
-    id: localStorage.getItem('id'),
-    name: localStorage.getItem('name'),
-    url, title,
-  })
+/*
+ * Promise to upload browse to database.
+ */
+const writeBrowseData = (image, url, published) => {
+  const id = localStorage.getItem('id');
+  const name = localStorage.getItem('name');
+  return database.ref(`browses/${id}/${image}`).set({
+    name, url, published,
+  });
 };
 
-// Promise to upload image to storage.
-const uploadImage = (image) => {
-  const id = localStorage.getItem('id');
-  const guid = getGUID();
-  const imageRef = storage.child(`${id}/${guid}.jpg`);
-  return imageRef.putString(image).then(function(snapshot) {
-    console.log(snapshot);
+/*
+ * Promise to upload/update link data.
+ */
+const writeLinkData = (url, title, published) => {
+  return new Promise((resolve, reject) => {
+    database.ref(`links`).once('value', (snapshot) => {
+      if (snapshot.hasChild(`${url}`)) {
+        // Update browser array, last published time, by
+        console.log(snapshot);
+      } else {
+        // Entry doesn't exist yet so create.
+        const id = localStorage.getItem('id');
+        database.ref(`links/${url}`).set({
+          url, title, browsers: [id],
+          first_published_by: id, first_published: published,
+        }).then(resolve).catch(reject);
+      }
+    });
   });
+};
+
+/*
+ * Promise to upload image to storage.
+ */
+const uploadImage = (image) => {
+  const guid = getGUID();
+  const id = localStorage.getItem('id');
+  return storage.child(`${id}/${guid}`).putString(image, 'data_url');
 };
 
 chrome.tabs.onUpdated.addListener(onFacebookLogin);
