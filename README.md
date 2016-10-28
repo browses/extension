@@ -14,24 +14,14 @@ To test the API run `npm test` from the aws directory.
 
 ```
 browses: {
-	browser: 10153134439438751
-	name: Joe Todd
-	published: 1470946837213
-	image: http://s3.amazonaws.com/browses/10153134439438751/e0256977-886c-4b30-bdf5-bcc7fdabcbef
-	url: http://google.com
+    browse: {
+        uid: fa29600c-3f28-4837-ba1a-75b732b257ae
+        browser: 10153134439438751
+        name: Joe Todd
+        published: 1470946837213
+        image: http://firebasestorage.com/fa29600c-3f28-4837-ba1a-75b732b257ae/e0256977-886c-4b30-bdf5-bcc7fdabcbef
+        url: http://google.com
+    }
 }
 
-links: {
-	url: http://google.com
-	title: Some Website
-	browsers: [10153134439438751, 106531369438741]
-	first_published: 1470946837213
-	first_published_by: 10153134439438751
-	last_published: 1470946837213
-	last_published_by: 106531369438741
-	useful: [10153134439438751, 106531369438741]
-	interesting: [10153134439438751]
-	entertaining: [106531369438741]
-	viewed: 99
-}
 ```

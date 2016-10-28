@@ -32,10 +32,9 @@ const onFacebookLogin = () => {
       // Sign in with the credential from the Facebook user.
       firebase.auth().signInWithCredential(credential)
       .then((firebaseUser) => {
-        localStorage.setItem('id', firebaseUser.providerData[0].uid);
-        localStorage.setItem('name', firebaseUser.displayName);
         uploadLatestBrowse();
-      }).catch(console.log);
+      })
+      .catch(console.log);
     }
   });
 };
@@ -44,10 +43,9 @@ const onFacebookLogin = () => {
  * Once a browse has been uploaded then we want to show
  * a list of the most recent browses in a new tab
  */
-const viewUserBrowses = () => {
+const viewBrowses = () => {
   // Redirect to the url for the users browses page
-  const browser = localStorage.getItem('id') || '';
-  const url = `http://browses.io/${browser}`;
+  const url = 'http://browses.io';
   chrome.tabs.create({ url });
 };
 
@@ -79,13 +77,9 @@ const uploadLatestBrowse = () => {
   chrome.browserAction.setBadgeText({ text: ' ' });
   // Get the latest browse and extend with latest token
   const data = JSON.parse(localStorage.getItem('browse'));
-  const published = getTimestamp();
   // Post shot to the firebase
   uploadImage(data.image)
-  .then((snapshot) => {
-    console.log(snapshot);
-    writeBrowseData(snapshot.ref.name, data.url, published, snapshot.downloadURL)
-  })
+  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, snapshot.downloadURL))
   .then(() => localStorage.removeItem('browse'))
   .then(() => chrome.browserAction.setBadgeText({ text: '' }));
 };
@@ -124,11 +118,8 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
     // Sign in with the credential to see if token is valid
     const credential = firebase.auth.FacebookAuthProvider.credential(token);
     firebase.auth().signInWithCredential(credential)
-    .then((firebaseUser) => {
-      localStorage.setItem('id', firebaseUser.providerData[0].uid);
-      localStorage.setItem('name', firebaseUser.displayName);
-      resolve(firebaseUser);
-    }).catch(reject);
+    .then((firebaseUser) => resolve(firebaseUser))
+    .catch(reject);
   }
 });
 
@@ -160,16 +151,6 @@ const getGUID = () => {
 };
 
 /*
- * Forward slashes, dots, hashes etc result in the creation
- * of a new level in Firebase database. So we need to encode them.
- */
-const encodeURL = (url) => {
-  return encodeURIComponent(url).replace(/\./g, '%2E');
-};
-
-const getTimestamp = () => parseInt(new Date().getTime() / 1000, 10);
-
-/*
  * Initialise Firebase
  */
 const config = {
@@ -187,11 +168,15 @@ const storage = firebase.storage().ref();
 /*
  * Promise to upload browse to database.
  */
-const writeBrowseData = (file, url, published, image) => {
-  const uid = localStorage.getItem('id');
-  const name = localStorage.getItem('name');
-  return database.ref(`browses/${uid}/${file}`).set({
-    uid, name, url, published, image
+const writeBrowseData = (browse, url, image) => {
+  return database.ref(`browses/${browse}`).set({
+    uid: firebase.auth().currentUser.uid,
+    browser: firebase.auth().currentUser.providerData[0].uid,
+    name: firebase.auth().currentUser.providerData[0].displayName,
+    published: firebase.database.ServerValue.TIMESTAMP,
+    browsers: [firebase.auth().currentUser.providerData[0].uid],
+    views: 1,
+    url, image,
   });
 };
 
@@ -200,8 +185,8 @@ const writeBrowseData = (file, url, published, image) => {
  */
 const uploadImage = (image) => {
   const guid = getGUID();
-  const id = localStorage.getItem('id');
-  return storage.child(`${id}/${guid}`).putString(image, 'data_url');
+  const uid = firebase.auth().currentUser.uid;
+  return storage.child(`${uid}/${guid}`).putString(image, 'data_url');
 };
 
 chrome.tabs.onUpdated.addListener(onFacebookLogin);
