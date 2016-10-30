@@ -79,7 +79,7 @@ const uploadLatestBrowse = () => {
   const data = JSON.parse(localStorage.getItem('browse'));
   // Post shot to the firebase
   uploadImage(data.image)
-  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, snapshot.downloadURL))
+  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, snapshot.downloadURL, data.title))
   .then(() => localStorage.removeItem('browse'))
   .then(() => chrome.browserAction.setBadgeText({ text: '' }));
 };
@@ -117,8 +117,9 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
   else {
     // Sign in with the credential to see if token is valid
     const credential = firebase.auth.FacebookAuthProvider.credential(token);
-    firebase.auth().signInWithCredential(credential)
-    .then((firebaseUser) => resolve(firebaseUser))
+    firebase.auth()
+    .signInWithCredential(credential)
+    .then(resolve)
     .catch(reject);
   }
 });
@@ -128,7 +129,7 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
  */
 const captureBrowse = () => Promise.all([
   takeScreenshot(),
-  getActiveTab()
+  getActiveTab(),
 ])
 .then(data => {
   // Store the latest capture data
@@ -168,15 +169,19 @@ const storage = firebase.storage().ref();
 /*
  * Promise to upload browse to database.
  */
-const writeBrowseData = (browse, url, image) => {
+const writeBrowseData = (browse, url, image, title) => {
+  const user = firebase.auth().currentUser;
+  const fb = user.providerData[0];
   return database.ref(`browses/${browse}`).set({
-    uid: firebase.auth().currentUser.uid,
-    browser: firebase.auth().currentUser.providerData[0].uid,
-    name: firebase.auth().currentUser.providerData[0].displayName,
+    uid: user.uid,
+    browser: fb.uid,
+    name: fb.displayName,
     published: firebase.database.ServerValue.TIMESTAMP,
-    browsers: [firebase.auth().currentUser.providerData[0].uid],
+    browsers: [fb.uid],
     views: 1,
-    url, image,
+    url,
+    image,
+    title,
   });
 };
 
