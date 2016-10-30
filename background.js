@@ -30,23 +30,15 @@ const onFacebookLogin = () => {
       // Build Firebase credential with the Facebook auth token.
       const credential = firebase.auth.FacebookAuthProvider.credential(accessToken);
       // Sign in with the credential from the Facebook user.
-      firebase.auth().signInWithCredential(credential)
-      .then((firebaseUser) => {
-        uploadLatestBrowse();
-      })
+      firebase.auth()
+      .signInWithCredential(credential)
+      .then(addUploadIndicator)
+      .then(uploadImage)
+      .then(storeBrowse)
+      .then(removeUploadIndicator)
       .catch(console.log);
     }
   });
-};
-
-/*
- * Once a browse has been uploaded then we want to show
- * a list of the most recent browses in a new tab
- */
-const viewBrowses = () => {
-  // Redirect to the url for the users browses page
-  const url = 'http://browses.io';
-  chrome.tabs.create({ url });
 };
 
 /*
@@ -67,22 +59,16 @@ const compressImage = url => {
   } return url;
 };
 
-/*
- * If a good token has been found then format the latest browse
- * data and POST it to the server for storage
- */
-const uploadLatestBrowse = () => {
+const addUploadIndicator = () => {
   // Set browser badge to indicate loading
   chrome.browserAction.setBadgeBackgroundColor({ color: [210, 0, 60, 255] });
   chrome.browserAction.setBadgeText({ text: ' ' });
-  // Get the latest browse and extend with latest token
-  const data = JSON.parse(localStorage.getItem('browse'));
-  // Post shot to the firebase
-  uploadImage(data.image)
-  .then((snapshot) => writeBrowseData(snapshot.ref.name, data.url, snapshot.downloadURL, data.title))
-  .then(() => localStorage.removeItem('browse'))
-  .then(() => chrome.browserAction.setBadgeText({ text: '' }));
-};
+}
+
+const removeUploadIndicator = () => {
+  // Remove browser badge to indicate loading complete
+  chrome.browserAction.setBadgeText({ text: '' })
+}
 
 const takeScreenshot = () => new Promise((resolve, reject) => {
   // Capture a base64 encoded image of active tab
@@ -125,22 +111,6 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
 });
 
 /*
- * Capture browse and upload.
- */
-const captureBrowse = () => Promise.all([
-  takeScreenshot(),
-  getActiveTab(),
-])
-.then(data => {
-  // Store the latest capture data
-  storeBrowseLocally(data);
-  // Prompt auth or upload browse
-  checkAuthStatus()
-  .then(uploadLatestBrowse)
-  .catch(facebookLogin);
-});
-
-/*
  * Return random guid string
  */
 const getGUID = () => {
@@ -152,47 +122,70 @@ const getGUID = () => {
 };
 
 /*
- * Initialise Firebase
+ * Promise to upload image to storage.
  */
-const config = {
-  apiKey: "AIzaSyDf0B5peKIIXbamijhyJjqtJtv6LsYiQIQ",
-  authDomain: "browses-ef3f0.firebaseapp.com",
-  databaseURL: "https://browses-ef3f0.firebaseio.com",
-  storageBucket: "browses-ef3f0.appspot.com",
-  messagingSenderId: "685716734453"
+const uploadImage = () => {
+  const browse = JSON.parse(localStorage.getItem('browse'));
+  const guid = getGUID();
+  const uid = firebase.auth().currentUser.uid;
+  return storage.child(`${uid}/${guid}`).putString(browse.image, 'data_url');
 };
-firebase.initializeApp(config);
-
-const database = firebase.database();
-const storage = firebase.storage().ref();
 
 /*
  * Promise to upload browse to database.
  */
-const writeBrowseData = (browse, url, image, title) => {
+const storeBrowse = image => {
+  const browse = JSON.parse(localStorage.getItem('browse'));
   const user = firebase.auth().currentUser;
   const fb = user.providerData[0];
-  return database.ref(`browses/${browse}`).set({
+  return database.ref(`browses/${image.ref.name}`).set({
     uid: user.uid,
     browser: fb.uid,
     name: fb.displayName,
     published: firebase.database.ServerValue.TIMESTAMP,
     browsers: [fb.uid],
     views: 1,
-    url,
-    image,
-    title,
+    url: browse.url,
+    title: browse.title,
+    image: image.downloadURL,
   });
 };
 
 /*
- * Promise to upload image to storage.
+ * Capture browse and upload.
  */
-const uploadImage = (image) => {
-  const guid = getGUID();
-  const uid = firebase.auth().currentUser.uid;
-  return storage.child(`${uid}/${guid}`).putString(image, 'data_url');
-};
+const captureBrowse = () => Promise.all([
+  takeScreenshot(),
+  getActiveTab(),
+])
+.then(data => {
+  // Store the latest capture data
+  storeBrowseLocally(data);
+  // Prompt auth or upload browse
+  checkAuthStatus()
+  .then(addUploadIndicator)
+  .then(uploadImage)
+  .then(storeBrowse)
+  .then(removeUploadIndicator)
+  .catch(facebookLogin);
+});
+
+/*
+ * Initialise Firebase
+ */
+firebase.initializeApp({
+  apiKey: "AIzaSyDf0B5peKIIXbamijhyJjqtJtv6LsYiQIQ",
+  authDomain: "browses-ef3f0.firebaseapp.com",
+  databaseURL: "https://browses-ef3f0.firebaseio.com",
+  storageBucket: "browses-ef3f0.appspot.com",
+  messagingSenderId: "685716734453"
+});
+
+/*
+ * Setup Firebase Services
+ */
+const database = firebase.database();
+const storage = firebase.storage().ref();
 
 chrome.tabs.onUpdated.addListener(onFacebookLogin);
 chrome.browserAction.onClicked.addListener(captureBrowse);
