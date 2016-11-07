@@ -138,7 +138,8 @@ const storeBrowse = image => {
   const browse = JSON.parse(localStorage.getItem('browse'));
   const user = firebase.auth().currentUser;
   const fb = user.providerData[0];
-  return database.ref(`browses/${image.ref.name}`).set({
+  return database.ref(`browses/${image.ref.name}`)
+  .setWithPriority({
     uid: user.uid,
     browser: fb.uid,
     name: fb.displayName,
@@ -148,7 +149,7 @@ const storeBrowse = image => {
     url: browse.url,
     title: browse.title,
     image: image.downloadURL,
-  });
+  }, -1 * Date.now());
 };
 
 /*
