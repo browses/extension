@@ -144,8 +144,6 @@ const storeBrowse = image => {
     browser: fb.uid,
     name: fb.displayName,
     published: firebase.database.ServerValue.TIMESTAMP,
-    browsers: [fb.uid],
-    views: 1,
     url: browse.url,
     title: browse.title,
     image: image.downloadURL,
