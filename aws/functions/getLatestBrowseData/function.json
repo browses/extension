@@ -1,8 +1,0 @@
-{
-  "name": "getLatestBrowseData",
-  "description": "Get browse data from the last 24 hours",
-  "runtime": "nodejs4.3",
-  "memory": 256,
-  "timeout": 10,
-  "role": "arn:aws:iam::188428953446:role/LambdaExecution"
-}

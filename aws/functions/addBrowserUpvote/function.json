@@ -1,8 +1,0 @@
-{
-  "name": "addBrowserUpvote",
-  "description": "Add upvote to link, either useful, interesting or entertaining",
-  "runtime": "nodejs4.3",
-  "memory": 256,
-  "timeout": 10,
-  "role": "arn:aws:iam::188428953446:role/LambdaExecution"
-}
