@@ -117,7 +117,7 @@ const uploadImage = () => {
   const browse = JSON.parse(localStorage.getItem('browse'));
   const guid = database.ref('browses').push().key;
   const uid = firebase.auth().currentUser.uid;
-  return storage.child(`${uid}/${guid}`).putString(browse.image, 'data_url');
+  return storage.child(`${guid}`).putString(browse.image, 'data_url');
 };
 
 /*
