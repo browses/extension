@@ -1,8 +1,0 @@
-{
-  "name": "addBrowserViewed",
-  "description": "Add browser to link when viewing a browse",
-  "runtime": "nodejs4.3",
-  "memory": 256,
-  "timeout": 10,
-  "role": "arn:aws:iam::188428953446:role/LambdaExecution"
-}
