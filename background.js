@@ -111,22 +111,11 @@ const checkAuthStatus = () => new Promise((resolve, reject) => {
 });
 
 /*
- * Return random guid string
- */
-const getGUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
-
-/*
  * Promise to upload image to storage.
  */
 const uploadImage = () => {
   const browse = JSON.parse(localStorage.getItem('browse'));
-  const guid = getGUID();
+  const guid = database.ref('browses').push().key;
   const uid = firebase.auth().currentUser.uid;
   return storage.child(`${uid}/${guid}`).putString(browse.image, 'data_url');
 };
@@ -139,7 +128,7 @@ const storeBrowse = image => {
   const user = firebase.auth().currentUser;
   const fb = user.providerData[0];
   return database.ref(`browses/${image.ref.name}`)
-  .setWithPriority({
+  .set({
     uid: user.uid,
     browser: fb.uid,
     name: fb.displayName,
@@ -147,7 +136,7 @@ const storeBrowse = image => {
     url: browse.url,
     title: browse.title,
     image: image.downloadURL,
-  }, -1 * Date.now());
+  });
 };
 
 /*
