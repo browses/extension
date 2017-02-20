@@ -129,6 +129,7 @@ const storeBrowse = image => {
   const fb = user.providerData[0];
   return database.ref(`browses/${image.ref.name}`)
   .set({
+    key: image.ref.name,
     uid: user.uid,
     browser: fb.uid,
     name: fb.displayName,
