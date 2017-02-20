@@ -45,9 +45,11 @@ exports.handle = function handler(event, context) {
           Key: {
             url: event.url,
           },
-          UpdateExpression: 'ADD browsers :brs',
+          UpdateExpression: 'ADD browsers :brs, viewed :cnt SET active = :ok',
           ExpressionAttributeValues: {
             ':brs': dynamo.createSet([browser]),
+            ':cnt': 1,
+            ':ok': 'true',
           },
         };
         /*

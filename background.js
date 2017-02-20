@@ -8,7 +8,8 @@ const facebookLogin = () => {
   chrome.tabs.create({
     url: 'https://www.facebook.com/dialog/oauth' +
     '?client_id=1659456037715738&response_type=token' +
-    '&redirect_uri=https://www.facebook.com/connect/login_success.html'
+    '&redirect_uri=https://www.facebook.com/connect/login_success.html' +
+    '&scope=user_friends'
   });
 }
 

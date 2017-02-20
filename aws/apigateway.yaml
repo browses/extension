@@ -611,6 +611,105 @@ paths:
               type: string
             Access-Control-Allow-Origin:
               type: string
+  /browses/popular:
+    get:
+      summary: Get Most Popular Browses
+      description: |
+        Get a list of most popular browses
+      tags:
+        - Resources
+      produces:
+        - application/json
+      parameters:
+        - name: page
+          in: query
+          description: Page of data
+          type: integer
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: aws
+        uri: arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:188428953446:function:browses_getMostViewedData/invocations
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "page": "$input.params('page')"
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Bad Request: .*":
+            statusCode: "400"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+          "Internal Error: .*":
+            statusCode: "500"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      responses:
+        200:
+          description: OK
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/MostViewedResponses"
+        400:
+          description: Bad Request
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: Internal Error
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+          schema:
+            $ref: "#/definitions/Error"
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - CORS
+      x-amazon-apigateway-auth:
+        type: none
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Requested-With'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+      responses:
+        200:
+          description: Default response for CORS method
+          headers:
+            Access-Control-Allow-Headers:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Origin:
+              type: string
 definitions:
   Empty:
     type: object
@@ -652,6 +751,9 @@ definitions:
       published_last_by:
         type: string
         description: browse who published the browse last
+      viewed:
+        type: integer
+        description: number of times this url has been browsed
   LatestBrowseResponses:
     type: array
     items:
@@ -722,6 +824,10 @@ definitions:
     type: array
     items:
       $ref: "#/definitions/UserBrowseResponse"
+  MostViewedResponses:
+    type: array
+    items:
+      $ref: "#/definitions/UserBrowseResponse"
   UserBrowseResponse:
     properties:
       browser:
@@ -751,6 +857,9 @@ definitions:
       published_last_by:
         type: string
         description: browse who published the browse last
+      viewed:
+        type: integer
+        description: number of times this url has been browsed
   UpvoteBrowse:
     properties:
       url:
