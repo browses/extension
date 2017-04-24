@@ -45,19 +45,21 @@ const onFacebookLogin = () => {
  * Before uploading an image we crudly compress it using
  * a canvas element toDataURL quality option
  */
-const compressImage = url => {
+const compressImage = url => new Promise(function(resolve, reject) {
   const size = url.length;
   if (size > 100000) {
     const rate = (-0.0000005 * size) + 0.9;
     const cvs = document.createElement('canvas');
     const img = new Image();
+    img.onload = () => {
+      cvs.width = img.naturalWidth;
+      cvs.height = img.naturalHeight;
+      cvs.getContext("2d").drawImage(img, 0, 0);
+      resolve(cvs.toDataURL('image/jpeg', rate));
+    }
     img.src = url;
-    cvs.width = img.naturalWidth;
-    cvs.height = img.naturalHeight;
-    cvs.getContext("2d").drawImage(img, 0, 0);
-    return cvs.toDataURL('image/jpeg', rate);
-  } return url;
-};
+  } else resolve(url);
+});
 
 const addUploadIndicator = () => {
   // Set browser badge to indicate loading
