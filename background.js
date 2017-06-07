@@ -1,3 +1,15 @@
+
+/*
+ * Listen out for version request from browser
+ * respond with the current version number
+ */
+chrome.runtime.onMessageExternal.addListener(
+  (request, sender, sendResponse) =>
+    request && request.message && request.message == "version"
+    ? sendResponse({ version: chrome.runtime.getManifest().version })
+    : true
+);
+
 /*
  * Open a new tab that prompts the user to allow browses
  * access to the users facebook account information

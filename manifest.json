@@ -1,6 +1,6 @@
 {
-  "name": "Browses-Firebase",
-  "version": "2.0",
+  "name": "Browses",
+  "version": "2.2",
   "description": "Plot your adventure through the web",
   "background": {
     "persistent": false,
@@ -18,6 +18,9 @@
     "tabs",
     "activeTab"
   ],
+  "externally_connectable": {
+    "matches": ["*://browses.local/*", "*://browses.io/*"]
+  },
   "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
   "manifest_version": 2
 }
