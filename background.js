@@ -98,6 +98,19 @@ const getActiveTab = () => new Promise((resolve, reject) => {
   });
 });
 
+const openWebView = () => new Promise((resolve, reject) => {
+  // Open the users feed in a new tab or focus already open tab
+  const uid = firebase.auth().currentUser.providerData[0].uid;
+  const profile = 'https://browses.io/' + uid;
+  chrome.tabs.getAllInWindow(undefined, function(tabs) {
+    const profileTab = tabs.find(tab => tab.url === profile);
+    if(profileTab) {
+      chrome.tabs.update(profileTab.id, { selected: true });
+      chrome.tabs.reload(profileTab.id);
+    } else chrome.tabs.create({ url: profile });
+  });
+});
+
 const storeBrowseLocally = data => {
   // Put the browse data from last capture into storage
   localStorage.setItem('browse', JSON.stringify({
@@ -171,6 +184,7 @@ const captureBrowse = () => Promise.all([
   .then(uploadImage)
   .then(storeBrowse)
   .then(removeUploadIndicator)
+  .then(openWebView)
   .catch(facebookLogin);
 });
 

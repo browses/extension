@@ -1,7 +1,7 @@
 {
   "name": "Browses",
-  "version": "2.2",
-  "description": "Plot your adventure through the web",
+  "version": "2.3",
+  "description": "Plot your adventures through the web",
   "background": {
     "persistent": false,
     "page": "background.html"
